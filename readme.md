@@ -1,16 +1,19 @@
-# EPA Open Source Reference
+# Equity in Wastewater Infrastructure: Mapping the Nation's Sewersheds
+## SSWR.409.2.1.12
 
-## Brief Project Description
+### Sub-Product Lead
+Andrew Murray & Alex Hall (ORD-CESER-LRTD-CAISB)
 
-This repository contains files for teams to reuse when working in and with EPA Open Source projects.
+### Sub-Product Description
+This sub-product is being developed in collaboration with EPA's Office of Water/Office of Wastewater Management. The sub-product will geographically define the nation's wastewater collection systems (sewersheds). The Equity in Wastewater Infrastructure Mapping project will aid in the investigation of five efforts. 1.) To analyze how wastewater needs are distributed across the US population and provide the means to more effectively analyze the impacts of state revolving fund projects related to wastewater infrastructure. 2.) Wastewater surveillance: knowing the extent of sewersheds is paramount in understanding community level health trends through wastewater surveillance. One salient example is with the tracking of SARS-CoV-2 through wastewater-based models, as well as emerging contaminant surveillance. 3.) Knowing the geographic extent of sewersheds allows for better modeling of influent loads impacting treatment plants. 4.) Identifying gaps in centralized system services and providing state and federal support to decentralized communities 5.) Identifying gaps in service, and support EJ communities in accessing resources and funding.
 
-Also, this repository contains the link to [EPA's System Lifecycle Management Policy and Procedure](https://www.epa.gov/irmpoli8/policy-procedures-and-guidance-system-life-cycle-management-slcm) which lays out EPA's Open Source Software Policy and [EPA's Open Source Code Guidance](https://www.epa.gov/developers/open-source-software-and-epa-code-repository-requirements). 
+ORD researchers will provide the geographic data necessary for meeting these five critical goals. Through advanced machine learning techniques, researchers can develop effective and robust models that accurately estimate the geographic extent of the nations' tens of thousands of municipal wastewater distribution systems. Where available, state and local data on sewershed boundaries and/or the prevalence of decentralized (septic) systems will be collected. This data will be used to train a machine learning model at the census block level geography. This training data will be paired with explanatory data such as the American Community Survey, remote sensing data, and digital elevation models to effectively train, validate, and apply the model nationally. The final product will be a public facing dataset of estimated utility scale sewersheds for the United States.
 
-## For EPA Teams
+### Sub-Product Type
+Scientific Data, Software, and Models (Dataset)
 
-For EPA Teams, we have guidance on how EPA puts our open source software policies into practice on GitHub. Read [EPA's GitHub Guidance.](https://www.epa.gov/webguide/github-guidance)
-
-[EPA's Open Source Project repo](https://github.com/USEPA/open-source-projects) is for EPA teams to reuse file for properly maintaining their open source project. All projects must include a readme.md, license.md, contributing.md file and the disclaimer below.   
+### Planned Completion Date FY/Quarter
+FY26 Q4
 
 ### Credits
 

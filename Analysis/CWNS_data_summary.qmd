@@ -1,0 +1,53 @@
+---
+title: "Sewershed Modeling"
+format: html
+---
+
+ERG funding for this project through February 2025
+- 
+
+Clean watersheds needs survey
+- verification of the existence of a treatment plant (with lat lon)
+- discharge, discharge type
+- population served
+- does it discharge to another facility
+
+- Access Database
+
+- Population served was calculated by ERG for upstream populations, double counting was specifically avoided.
+
+ISIS/NPDES permits database has all discharge facilities (most facilities).
+
+We know the universe to about 99% (~17,544 systems)
+
+Systems sometimes discharge into multiple other systems
+
+we know population served at the lowest level of system (collection system)
+
+## Available Sewershed Data
+
+```{r}
+library(sf)
+library(leaflet)
+library(tidyr)
+library(dplyr)
+
+names <- st_layers("data/Sewersheds.gdb")$name
+
+
+
+
+```
+
+
+## Sewershed Universe
+
+## Data Sources
+
+- Outlets?
+- Treatment?
+- Overflows?
+
+- Digital Elevation
+
+

@@ -1,0 +1,133 @@
+---
+title: "Facilities"
+format: html
+---
+
+## This script pulls together all of the locations we have from the Community Wastewater Needs Survey
+
+There are five relevant tables in the access database of technical information on locations
+
+# Tables Needed
+
+## Facilities Tables
+
+These table list the facility names and types
+
+- 'FACILITIES': This table lists all facilities that were captured by the CWNS
+- 'FACILITIES_CONFIRMED': This table lists facilities that were confirmed to exist but were not originally captured by the CWNS. Data for these facilities may be out of data and/or incomplete.
+
+## Population Served Tables
+
+These tables list the population served for each of the facilities listed in the 'facilities' tables.
+
+- 'POPULATION_WASTEWATER': (INITIALLY CAUGHT BY SURVEY). This table does not contain location data. 
+- POPULATION_WASTEWATER_CONFIRMED (AVAILABLE DATA FOR FACILITIES_CONFIRMED CAUGHT AFER THE FACT). This table contains location data
+
+## Physical Location
+
+- 'PHYSICAL_LOCATION': Lists physical location data for facilities captured by the CWNS (locations for facilities in 'FACILITIES')
+
+Assume that sewersheds in the 'POPULATION_WASTEWATER_CONFIRMED' dataset are all end points
+
+```{r seetup, include = FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+library(vroom)
+library(tidyverse)
+library(sf)
+library(here)
+library(DT)
+library(leaflet)
+
+
+# Data captured by CWNS
+
+fac <- vroom(here("data/FACILITIES.txt"))%>%
+  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
+
+pop <- vroom(here("data/POPULATION_WASTEWATER.txt"))%>%
+  select(CWNS_ID,FACILITY_ID,POPULATION_TYPE,RESIDENTIAL_POP_2022,
+         NONRESIDENTIAL_POP_2022,TOTAL_RES_POPULATION_2022,TOTAL_NONRES_POPULATION_2022,
+         PART_OF_SEWERSHED,END_FACILITY)%>%
+  mutate(END_FACILITY = if_else(is.na(END_FACILITY),"N",END_FACILITY))
+
+fac.types <- vroom(here("data/FACILITY_TYPES.txt"))%>%
+  select(CWNS_ID,FACILITY_ID,FACILITY_TYPE)
+
+fac.locs <- vroom(here("data/PHYSICAL_LOCATION.txt"))%>%
+  select(!STATE_CODE)
+
+df.1 <- fac%>%
+  left_join(pop, by = c("CWNS_ID","FACILITY_ID"))%>%
+  left_join(fac.locs, by = c("CWNS_ID","FACILITY_ID"))%>%
+  left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))
+
+
+# Data captured after CWNS
+fac.cf <- vroom(here("data/FACILITIES_CONFIRMED.txt"))%>%
+  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
+
+pop.cf <- vroom(here("data/POPULATION_WASTEWATER_CONFIRMED.txt"))%>%
+  mutate(ZIP_CODE = substr(ZIP_CODE,1,5))%>%
+  select(!c(STATE_CODE,INFRASTRUCTURE_TYPE))
+
+df.2 <- fac.cf%>%
+  left_join(pop.cf,by = c("CWNS_ID","FACILITY_ID"))%>%
+  mutate(END_FACILITY = "Y")
+
+df.bind <- bind_rows(df.1,df.2)
+
+```
+
+
+## Facilities Missing Locations
+
+1,116 facilities are missing latitude or longitude (1.4%)
+```{r}
+locs.summarise <- df.bind%>%
+  mutate(hasloc = if_else(is.na(LATITUDE)|is.na(LONGITUDE),0,1))%>%
+  group_by(FACILITY_TYPE)%>%
+  summarise(haveLoc = sum(hasloc),
+            n = n())%>%
+  mutate(PctLocs = 100*(haveLoc/n))
+```
+
+## Map of Facilities
+
+There are a total of **77,019 unique** facilities with locations attributed to **32,107** CWNS IDs. 
+
+```{r mapFacilities}
+
+sf <- df.bind%>%
+  drop_na(LATITUDE,LONGITUDE)%>%
+  filter(!LATITUDE == 0 & !LONGITUDE == 0)%>%
+  mutate(FACILITY_NAME = str_replace_all(FACILITY_NAME, "[^[:alnum:]]", " "))%>%
+  st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = 4269)%>%
+  st_transform(4326)
+
+leaflet(sf)%>%
+  addTiles()%>%
+  addCircleMarkers(weight = 1, radius = 3, color = "black",fillColor = "#8cd419", fillOpacity = 1,
+                   popup = ~paste("<b>ID: ",CWNS_ID,"</b><br>",
+                                  "Name: ",FACILITY_NAME,"<br>",
+                                  "Facility Type: ",FACILITY_TYPE))%>%
+  setView(-95,40,4)
+
+```
+
+
+## Map of Treatment Plants
+
+There are **24,018 treatment plants** attributed to **17,685 CWNS IDs**.
+```{r mapTreatment}
+treatment <- sf%>%
+  filter(FACILITY_TYPE == "Treatment Plant")
+
+leaflet(treatment)%>%
+  addTiles()%>%
+  addCircleMarkers(weight = 1, radius = 3, color = "black",fillColor = "#bd37cc", fillOpacity = 1,
+                   popup = ~paste("<b>ID: ",CWNS_ID,"</b><br>",
+                                  "Name: ",FACILITY_NAME,"<br>",
+                                  "Facility Type: ",FACILITY_TYPE))%>%
+  setView(-95,40,4)
+```
+
