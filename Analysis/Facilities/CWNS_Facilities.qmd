@@ -1,22 +1,92 @@
 ---
-title: "Facilities"
-format: html
+title: "CWNS Data Prep"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show Code"
+    toc: true
+engine: knitr
 ---
 
-## This script pulls together all of the locations we have from the Community Wastewater Needs Survey
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+library(vroom)
+library(tidyverse)
+library(sf)
+library(here)
+library(DT)
+library(leaflet)
+library(gt)
+```
 
+
+
+
+# Objectives
+
+1. Output polygons will represent the entire collection area leading to a treatment plant that is an end point (does not then discharge to another system).
+
+2. Every location available should be used as a spatial clue.
+
+# Input Tables
 There are five relevant tables in the access database of technical information on locations
 
-# Tables Needed
+```{r loadData}
+# Import CWNS data and create a flat file
 
-## Facilities Tables
+## Load facilities
+fac <- vroom(here("data/FACILITIES.txt"), show_col_types = FALSE)%>%
+  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
+
+## Load population served
+pop <- vroom(here("data/POPULATION_WASTEWATER.txt"), show_col_types = FALSE)%>%
+  select(CWNS_ID,FACILITY_ID,POPULATION_TYPE,RESIDENTIAL_POP_2022,
+         NONRESIDENTIAL_POP_2022,TOTAL_RES_POPULATION_2022,TOTAL_NONRES_POPULATION_2022,
+         PART_OF_SEWERSHED,END_FACILITY)%>%
+  mutate(END_FACILITY = if_else(is.na(END_FACILITY),"N",END_FACILITY))
+
+## Load facility types
+fac.types <- vroom(here("data/FACILITY_TYPES.txt"), show_col_types = FALSE)%>%
+  select(CWNS_ID,FACILITY_ID,FACILITY_TYPE)
+
+## Load facility locations
+fac.locs <- vroom(here("data/PHYSICAL_LOCATION.txt"), show_col_types = FALSE)%>%
+  select(!STATE_CODE)
+
+## Join population, location and types to facilities
+df.1 <- fac%>%
+  left_join(pop, by = c("CWNS_ID","FACILITY_ID"))%>%
+  left_join(fac.locs, by = c("CWNS_ID","FACILITY_ID"))%>%
+  left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))
+
+
+# Data captured after CWNS
+fac.cf <- vroom(here("data/FACILITIES_CONFIRMED.txt"), show_col_types = FALSE)%>%
+  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
+
+pop.cf <- vroom(here("data/POPULATION_WASTEWATER_CONFIRMED.txt"), show_col_types = FALSE)%>%
+  mutate(ZIP_CODE = substr(ZIP_CODE,1,5))%>%
+  select(!c(STATE_CODE,INFRASTRUCTURE_TYPE))
+
+
+# There is only one row for each CWNS_ID in this data, and it is assumed they are all treatment plants / endpoints
+df.2 <- fac.cf%>%
+  left_join(pop.cf,by = c("CWNS_ID","FACILITY_ID"))%>%
+  mutate(FACILITY_TYPE = "Treatment Plant",
+         END_FACILITY = "Y")
+
+df.bind <- bind_rows(df.1,df.2)%>%
+  distinct()
+```
+
+## Facility information
 
 These table list the facility names and types
 
 - 'FACILITIES': This table lists all facilities that were captured by the CWNS
-- 'FACILITIES_CONFIRMED': This table lists facilities that were confirmed to exist but were not originally captured by the CWNS. Data for these facilities may be out of data and/or incomplete.
+- 'FACILITIES_CONFIRMED': This table lists facilities that were confirmed to exist but were not originally captured by the CWNS. Data for these facilities may be out of date and/or incomplete.
 
-## Population Served Tables
+## Population Served
 
 These tables list the population served for each of the facilities listed in the 'facilities' tables.
 
@@ -27,107 +97,131 @@ These tables list the population served for each of the facilities listed in the
 
 - 'PHYSICAL_LOCATION': Lists physical location data for facilities captured by the CWNS (locations for facilities in 'FACILITIES')
 
-Assume that sewersheds in the 'POPULATION_WASTEWATER_CONFIRMED' dataset are all end points
+Assume that sewersheds in the 'POPULATION_WASTEWATER_CONFIRMED' dataset are all end points. States were instructed to input locations of treatment plants. However, it is possible that if multiple facilities were listed such as a treatment plant and 'Collection: Pump Stations', that the location input may refer to a different facility. Only one location was input for each CWNS_ID.
 
-```{r seetup, include = FALSE}
-knitr::opts_chunk$set(warning=FALSE, message=FALSE)
-library(vroom)
-library(tidyverse)
-library(sf)
-library(here)
-library(DT)
-library(leaflet)
+# Identifying the Universe of End Point Treatment Plants
 
+```{r endTreat}
+treatment.end <- df.bind%>%
+  filter(END_FACILITY == "Y" & FACILITY_TYPE=="Treatment Plant")
+```
 
-# Data captured by CWNS
+### Are any treatment end points missing locations?
 
-fac <- vroom(here("data/FACILITIES.txt"))%>%
-  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
-
-pop <- vroom(here("data/POPULATION_WASTEWATER.txt"))%>%
-  select(CWNS_ID,FACILITY_ID,POPULATION_TYPE,RESIDENTIAL_POP_2022,
-         NONRESIDENTIAL_POP_2022,TOTAL_RES_POPULATION_2022,TOTAL_NONRES_POPULATION_2022,
-         PART_OF_SEWERSHED,END_FACILITY)%>%
-  mutate(END_FACILITY = if_else(is.na(END_FACILITY),"N",END_FACILITY))
-
-fac.types <- vroom(here("data/FACILITY_TYPES.txt"))%>%
-  select(CWNS_ID,FACILITY_ID,FACILITY_TYPE)
-
-fac.locs <- vroom(here("data/PHYSICAL_LOCATION.txt"))%>%
-  select(!STATE_CODE)
-
-df.1 <- fac%>%
-  left_join(pop, by = c("CWNS_ID","FACILITY_ID"))%>%
-  left_join(fac.locs, by = c("CWNS_ID","FACILITY_ID"))%>%
-  left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))
-
-
-# Data captured after CWNS
-fac.cf <- vroom(here("data/FACILITIES_CONFIRMED.txt"))%>%
-  select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
-
-pop.cf <- vroom(here("data/POPULATION_WASTEWATER_CONFIRMED.txt"))%>%
-  mutate(ZIP_CODE = substr(ZIP_CODE,1,5))%>%
-  select(!c(STATE_CODE,INFRASTRUCTURE_TYPE))
-
-df.2 <- fac.cf%>%
-  left_join(pop.cf,by = c("CWNS_ID","FACILITY_ID"))%>%
-  mutate(END_FACILITY = "Y")
-
-df.bind <- bind_rows(df.1,df.2)
+```{r endMissing}
+missing.end <- treatment.end%>%
+  filter(is.na(LATITUDE)|is.na(LONGITUDE))%>%
+  select(CWNS_ID,FACILITY_NAME,STATE_CODE,TOTAL_RES_POPULATION_2022)%>%
+  distinct()%>%
+  arrange(desc(TOTAL_RES_POPULATION_2022))
 
 ```
 
+There are `r format(nrow(missing.end),big.mark=",")` CWNS_IDs that have missing or incomplete location data that represent end point treatment facilities. All facilities that are either missing a location or residential population are from the 'CONFIRMED' files which were not captured within the CWNS.
 
-## Facilities Missing Locations
+```{r missingByState}
+ggplot(missing.end)+
+  geom_bar(aes(y = STATE_CODE),color = "black", fill="#d490bb")+
+  labs(title = "Missing Treatment Plant Locations",subtitle = "by State", x = "Count of CWNS_IDs", y = "State")
+```
 
-1,116 facilities are missing latitude or longitude (1.4%)
+### List of CWNS_IDs that are Missing Locations
 ```{r}
-locs.summarise <- df.bind%>%
-  mutate(hasloc = if_else(is.na(LATITUDE)|is.na(LONGITUDE),0,1))%>%
-  group_by(FACILITY_TYPE)%>%
-  summarise(haveLoc = sum(hasloc),
-            n = n())%>%
-  mutate(PctLocs = 100*(haveLoc/n))
+datatable(missing.end)
 ```
 
-## Map of Facilities
 
-There are a total of **77,019 unique** facilities with locations attributed to **32,107** CWNS IDs. 
+We can also evaluate the percent complete by state as a function of total systems and population served, keeping in mind that 1,116 CWNS_IDs do not contain residential population (2022).
 
-```{r mapFacilities}
+```{r pctComplete, fig.height=8}
+treat.state <- treatment.end%>%
+  group_by(STATE_CODE)%>%
+  summarise(nCWNS = n(),
+            totalPop = sum(TOTAL_RES_POPULATION_2022,na.rm=TRUE))
 
-sf <- df.bind%>%
+with.locs <- treatment.end%>%
+  filter(!is.na(LATITUDE) & !is.na(LONGITUDE))%>%
+  group_by(STATE_CODE)%>%
+  summarise(nCWNS_LOCS = n(),
+            totalPop_LOCS = sum(TOTAL_RES_POPULATION_2022,na.rm=TRUE))
+
+pct.complete <- treat.state%>%
+  left_join(with.locs)%>%
+  mutate(Pct_CWNS = 100*(nCWNS_LOCS/nCWNS),
+         Pct_Pop = 100*(totalPop_LOCS/totalPop))
+
+
+ggplot(pct.complete)+
+  geom_col(aes(x = Pct_CWNS, y = fct_reorder(STATE_CODE,Pct_CWNS)))+
+  labs(title = "Percent of End Point Treatment Plants with Locations",subtitle="Count of CWNS_IDs",
+       x = "Percent of CWNS_IDs", y = "State")
+
+```
+
+```{r pctPop, fig.height=8}
+ggplot(pct.complete)+
+  geom_col(aes(x = Pct_Pop, y = fct_reorder(STATE_CODE,Pct_Pop)))+
+  labs(title = "Percent of End Point Treatment Plants with Locations",subtitle="Population Served",
+       x = "Percent of 2022 Residential Population", y = "State")
+```
+
+
+## Map of End Points
+
+There are 17,173 treatment plant end points with locations. Some locations appear to have location errors. These will need to be inspected.
+```{r mapTreatment}
+sf.end <- treatment.end%>%
+  mutate(FACILITY_NAME = iconv(FACILITY_NAME, "UTF-8", "UTF-8",sub=''))%>%
   drop_na(LATITUDE,LONGITUDE)%>%
-  filter(!LATITUDE == 0 & !LONGITUDE == 0)%>%
-  mutate(FACILITY_NAME = str_replace_all(FACILITY_NAME, "[^[:alnum:]]", " "))%>%
   st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = 4269)%>%
   st_transform(4326)
 
-leaflet(sf)%>%
-  addTiles()%>%
-  addCircleMarkers(weight = 1, radius = 3, color = "black",fillColor = "#8cd419", fillOpacity = 1,
-                   popup = ~paste("<b>ID: ",CWNS_ID,"</b><br>",
-                                  "Name: ",FACILITY_NAME,"<br>",
-                                  "Facility Type: ",FACILITY_TYPE))%>%
-  setView(-95,40,4)
-
-```
-
-
-## Map of Treatment Plants
-
-There are **24,018 treatment plants** attributed to **17,685 CWNS IDs**.
-```{r mapTreatment}
-treatment <- sf%>%
-  filter(FACILITY_TYPE == "Treatment Plant")
-
-leaflet(treatment)%>%
+leaflet(sf.end)%>%
   addTiles()%>%
   addCircleMarkers(weight = 1, radius = 3, color = "black",fillColor = "#bd37cc", fillOpacity = 1,
                    popup = ~paste("<b>ID: ",CWNS_ID,"</b><br>",
                                   "Name: ",FACILITY_NAME,"<br>",
-                                  "Facility Type: ",FACILITY_TYPE))%>%
+                                  "Facility Type: ",FACILITY_TYPE,"<br>",
+                                  "Residential Population (2022): ",RESIDENTIAL_POP_2022))%>%
   setView(-95,40,4)
 ```
+
+# Sewershed Data for Validation
+
+The model will need to be trained and tested on known sewershed polygons. The next step is to then identify polygons that we have that are appropriate for training / testing. To do this, we first load and combine all of the polygons we have into a single dataset. Each data source varies, meaning we need to be load each file individually, project it to a specified coordinate system and extract key data. For our base coordinate system we use WGS84.
+
+There are two folders we are using that Rachel has uploaded to the teams site:
+
+- 'State_Provided_Data'
+- 'Merged_State_Provided_and_Census_Places'
+
+## 'State_Provided_Data'
+
+```{r}
+sp.files <- data.frame(path = list.files(here("Data/State_Provided_Data"), pattern = ".shp$",full.names = TRUE),
+                       file = list.files(here("Data/State_Provided_Data"), pattern = ".shp$",full.names = FALSE))
+
+gt(sp.files)%>%
+  cols_hide("path")
+```
+
+
+* Note that shapefiles were converted to a geodatabase to strip z-value field from shapefiles. 
+
+### Connecticut
+
+
+```{r}
+#| label: tbl-ctHead
+#| tbl-cap: "First six rows of raw data imported for Connecticut. The total number of sewersheds is 145."
+
+ct <- st_read(here("Data/Sewersheds.gdb"), layer = "Connecticut", quiet = TRUE)%>%
+  select(TOWN,CNTY_NAME,Sewers,SewerStatu,TreatmentF,PassThroug)
+
+gt(head(ct))%>%
+  cols_hide("Shape")
+```
+
+
+
 
