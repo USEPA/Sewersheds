@@ -31,6 +31,12 @@ library(gt)
 # Input Tables
 There are five relevant tables in the access database of technical information on locations
 
+
+**NOT** safe to assume row in facilities_confirmed are all end point
+**YES** safe to assume all rows in population_confirmed are endpoints
+
+**REMOVE CHANGE_TYPE == "New"**
+
 ```{r loadData}
 # Import CWNS data and create a flat file
 
@@ -101,9 +107,12 @@ Assume that sewersheds in the 'POPULATION_WASTEWATER_CONFIRMED' dataset are all 
 
 # Identifying the Universe of End Point Treatment Plants
 
+- facility type contains “treatment plant”
+- Residential population > 0
+
 ```{r endTreat}
 treatment.end <- df.bind%>%
-  filter(END_FACILITY == "Y" & FACILITY_TYPE=="Treatment Plant")
+  filter(TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant")
 ```
 
 ### Are any treatment end points missing locations?
@@ -168,6 +177,8 @@ ggplot(pct.complete)+
 
 ## Map of End Points
 
+Previous: 17,544 (May not have filtered to end points)
+
 There are 17,173 treatment plant end points with locations. Some locations appear to have location errors. These will need to be inspected.
 ```{r mapTreatment}
 sf.end <- treatment.end%>%
@@ -175,6 +186,8 @@ sf.end <- treatment.end%>%
   drop_na(LATITUDE,LONGITUDE)%>%
   st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = 4269)%>%
   st_transform(4326)
+
+st_write(sf.end, here("Data/Endpoints.gpkg"),layer="Endpoints", append=FALSE)
 
 leaflet(sf.end)%>%
   addTiles()%>%
@@ -223,5 +236,11 @@ gt(head(ct))%>%
 ```
 
 
+## High Confidence States
+
+- New York
+- New Jersey
+- Vermont
+- Massachusetts
 
 

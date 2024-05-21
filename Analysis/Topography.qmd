@@ -1,0 +1,35 @@
+---
+title: "Topography"
+format: html
+---
+
+## Topographic Attributes of Sewersheds
+
+### Join endpoints to sewershed polygons
+
+Create a join table to match sewersheds to endpoints. Only keep 1:1 matches
+
+
+### Extract elevation for endpoints using elevatr package
+
+### Extract elevation profile for sewersheds
+
+### Normalize elevations so that endpoints = 0 and associated sewersheds are adjusted to zero
+This is done by subtracting the elevation at the endpoint from all elevations within the watershed
+
+## Plot results
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this 
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
