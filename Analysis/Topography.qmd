@@ -1,35 +1,449 @@
 ---
-title: "Topography"
+title: "Topographic Attributes of Sewersheds (New York)"
 format: html
+toc: TRUE
+toc-depth: 2
+code-fold: true
 ---
 
-## Topographic Attributes of Sewersheds
+```{r setup, include=FALSE}
+library(dplyr)
+library(sf)
+library(here)
+library(gt)
+library(elevatr)
+library(tidyr)
+library(vroom)
+library(ggplot2)
+library(stringr)
+library(plotly)
+library(leaflet)
+library(terra)
 
-### Join endpoints to sewershed polygons
-
-Create a join table to match sewersheds to endpoints. Only keep 1:1 matches
-
-
-### Extract elevation for endpoints using elevatr package
-
-### Extract elevation profile for sewersheds
-
-### Normalize elevations so that endpoints = 0 and associated sewersheds are adjusted to zero
-This is done by subtracting the elevation at the endpoint from all elevations within the watershed
-
-## Plot results
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
+knitr::opts_chunk$set(warning=FALSE, message = FALSE)
 ```
 
-You can add options to executable code like this 
 
-```{r}
-#| echo: false
-2 * 2
+## Join endpoints to sewershed polygons
+
+**Load sewershed polygons for New York**
+
+```{r loadSS}
+ss <- st_read(here("Data/Sewersheds.gdb"), layer = "New_York", quiet = TRUE)%>%
+  st_transform(5070)%>% # project to albers equal area
+  select(WWTP,WWTP_ID, Site_ID, CRMETHOD,POP2020)
+
+# Show first 6 rows of data
+ss[1:6,]%>%
+  st_drop_geometry()%>%
+  gt()
 ```
 
-The `echo: false` option disables the printing of code (only output is displayed).
+**Load endpoints**
+
+```{r}
+ep <- st_read(here("Data/Endpoints.gpkg"),layer="Endpoints", quiet = TRUE)%>%
+  st_transform(5070)%>%
+  select(CWNS_ID,FACILITY_ID,FACILITY_NAME,TOTAL_RES_POPULATION_2022)
+
+ep[1:6,]%>%
+  st_drop_geometry()%>%
+  gt()
+```
+
+**Create a join table to match sewersheds to endpoints. Only keep 1:1 matches**
+
+```{r}
+intrsct <- st_intersection(ep,ss)
+
+crswlk <- intrsct%>%
+  st_drop_geometry()%>%
+  select(CWNS_ID,WWTP_ID)
+
+counts <- intrsct%>%
+  st_drop_geometry()%>%
+  group_by(WWTP_ID)%>%
+  summarise(nEndpoints = n())%>%
+  filter(nEndpoints == 1)
+  
+intrsct.filter <- intrsct%>%
+  filter(WWTP_ID %in% counts$WWTP_ID)
+
+```
+
+
+Of the `r length(unique(intrsct$WWTP_ID))` New York sewershed boundaries, `r length(unique(intrsct.filter$WWTP_ID))` intersected a single endpoint.
+
+## Download Elevation Data
+
+We use the elevatr package to download elevation data for each sewershed. We download the DEMs and save them based on CWNS_ID
+
+```{r getDEMS, eval=FALSE}
+ss.filt <- ss%>%
+  filter(WWTP_ID %in% counts$WWTP_ID)%>%
+  st_transform(4269)
+
+for(n in 1:nrow(ss.filt)){
+  dem <- elevatr::get_elev_raster(ss.filt[n,], z = 12, clip="locations")
+  
+  # Get matching CWNS ID
+  cwns <- intrsct.filter$CWNS_ID[which(intrsct.filter$WWTP_ID == ss.filt$WWTP_ID[n])]
+  
+  raster::writeRaster(dem, paste0(here("Data/SS_DEMs"),"/DEM_",cwns,"_.tif"))
+}
+
+```
+
+
+## Example Elevation of Sewershed
+
+The 3D model below shows the sewershed for Auburn, NY with an overlay of the treatment plant location. We can see that in this single example, the treatment plant is lower than most of the sewershed.
+
+```{r rayshade, eval = FALSE}
+library(terra)
+library(rayshader)
+## Load DEM
+dem <- rast(here("Data/SS_DEMs/DEM_36007027001_.tif"))
+
+## Endpoint
+ep.ex <- ep%>%
+  filter(CWNS_ID == "36007027001")%>%
+  st_transform(st_crs(dem))
+
+ep.coords <- st_coordinates(ep.ex)
+
+elmat <- raster_to_matrix(dem)
+
+elmat %>%
+  height_shade() %>%
+  add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 180, zoom = .5, phi = 20, windowsize = c(1000, 800))
+  render_label(elmat, lat = ep.coords[[2]], lon = ep.coords[[1]],z = 250, zscale=10, extent=terra::ext(dem),
+               text = "Treatment Plant", textsize = 2, linewidth = 5, linecolor = "red")
+  save_png(filename = here("img/Example_Sewershed.PNG"))
+```
+
+![](img/sewershed24.gif)
+
+## Extract elevation profile for sewersheds
+
+For each sewershed, we subtract the minimum raster elevation value from every pixel in the raster. This will normalize all sewershed elevations to a base height of zero. We then calculate the following statistics for each sewershed:
+
+- Elevation Range
+- Median Elevation
+- Mean Elevation
+- Elevation at the end point
+- % of Sewershed at higher elevation than end point
+
+We can then explore the relationship between end point elevation and its associated sewershed.
+
+* Elevations are in meters
+
+```{r elevStats, eval = FALSE}
+
+# List DEMs
+dem.files <- data.frame(path = list.files(here("Data/SS_DEMs"), full.names = TRUE),
+                        file = list.files(here("Data/SS_DEMs"), full.names = FALSE))%>%
+  separate(file, into = c("Type","CWNS_ID","ext"), sep = "_")
+
+rast.stats <- data.frame()
+
+for(n in 1:nrow(dem.files)){
+  # Load DEM for sewershed
+  r <- rast(dem.files$path[n])
+  
+  # Get Range of DEM values
+  dem.minMax <- minmax(r)
+  dem.min <- dem.minMax[1,]
+  dem.max <- dem.minMax[2,]
+  dem.range <- dem.max - dem.min
+  
+  # Subtract the minimum raster value from the entire DEM to normalize
+  r.normal <- r - dem.min
+  
+  # Get Max Value for normalized raster
+  normal.max <- minmax(r.normal)[2,]
+  
+  normal.stats <- as.data.frame(terra::summary(r.normal))%>%
+    separate(Freq, into = c("stat","value"), sep = ":")
+  
+  # Get Elevation of the end point location
+  ep.dem <- ep%>%
+    filter(CWNS_ID == dem.files$CWNS_ID[n])%>%
+    st_transform(st_crs(r.normal))
+  
+  endpt.elev <- terra::extract(r.normal, ep.dem)[1,2]
+  
+  # Calculate the number of raster cells above the end point
+  freq <- freq(r.normal)%>%
+    mutate(Higher = ifelse(value >= endpt.elev,TRUE,FALSE))%>%
+    group_by(Higher)%>%
+    summarise(nCells = sum(count, na.rm = TRUE))%>%
+    pivot_wider(names_from = Higher, values_from = nCells)
+  
+  if(ncol(freq)==1){
+    freq <- cbind(freq, data.frame(`FALSE`=0))
+    colnames(freq) <- c("TRUE","FALSE")
+  }
+  
+  freq <- freq%>%
+    mutate(Pct_Uphill = `TRUE` / (`TRUE`+`FALSE`))
+  
+  newRow <- data.frame(CWNS_ID = dem.files$CWNS_ID[n],
+                       Elev_Range = dem.range,
+                       Elev_Max = normal.max,
+                       Elev_Mean = normal.stats$value[4],
+                       Elev_Med = normal.stats$value[3],
+                       Pct_Uphill = freq$Pct_Uphill,
+                       Elev_EP = endpt.elev)
+  
+  rast.stats <- rbind(rast.stats, newRow)
+}
+
+# Calculate area of sewersheds
+areas <- ss%>%
+  left_join(crswlk)%>%
+  select(CWNS_ID)%>%
+  st_transform(5070)%>%
+  mutate(Area_Km = as.numeric(st_area(.))/1000000)%>%
+  st_drop_geometry()
+
+stats.out <- rast.stats%>%
+  left_join(areas)
+
+vroom_write(stats.out, here("Data/NY_Topo_Stats.csv"), delim = ",")
+```
+
+
+## Uphill Sewershed Area
+
+@fig-qqplot illustrates the quantile function of the percentage of sewersheds that are uphill from their respective treatment plants. This plot tells us that sewershed areas are generally uphill of their treatment plants.
+
+```{r uphill Hist}
+#| label: fig-qqplot
+#| fig-cap: "Quantile Plot showing the Percentile of endpoints (y-axis) that have at least the % (x-axis) of their sewershed uphill."
+
+topo.df <- vroom(here("Data/NY_Topo_Stats.csv"), show_col_types = FALSE, col_types = c("CWNS_ID"="c"))
+
+qtiles <- as.data.frame(quantile(topo.df$Pct_Uphill, probs = seq(0,1,.01)))%>%
+  mutate(qtile = 100 - as.numeric(str_replace_all(rownames(.),"%","")))
+colnames(qtiles)[1] <- "Percent"
+ggplot(qtiles)+
+  geom_smooth(aes(y = qtile, x = 100*Percent),color = "#54ba6f")+
+  geom_point(aes(y = qtile, x = 100*Percent),color = "#3b90c4",size = 2, alpha = 0.5)+
+  geom_segment(x = 0, xend = 94.2, y = 50, yend = 50, linetype = "dashed")+
+  geom_segment(x = 94.2, xend = 94.2, y = 0, yend = 50,linetype = "dashed")+
+  annotate("label", x = 70, y = 35, label = "50% Of Treatment Plants\nhave > 94% of their sewershed uphill")+
+  labs(title = "Percent of Sewershed Uphill from Treatment Plant",
+       subtitle = "Cumulative Distribution", x = "% of Sewershed Uphill of Endpoint", y = "Quantile")
+```
+
+## Treatment plants mostly uphill from sewersheds
+
+### How large are these sewersheds related to % uphill?
+```{r}
+plot_ly(topo.df)%>%
+  add_markers(x = ~Area_Km, y = ~Pct_Uphill*100,
+              hoverinfo = "text",
+              text = ~paste("CWNS ID: ",CWNS_ID,"<br>",
+                            "% Uphill: ",round(100*Pct_Uphill,1),"% <br>",
+                            "Sewershed Area: ",round(Area_Km,1)," km<sup>2</sup>"),
+              marker = list(
+                color = '#54ba6f',
+                size = 12,
+                line = list(
+                  color = 'black',
+                  width = 1)))%>%
+  layout(title= list(text = "% Uphill vs. Area"), 
+         xaxis = list(title = list(text ='Area (km<sup>2</sup>)')),
+         yaxis = list(title = list(text ='% of Sewershed Uphill')))
+```
+
+
+Let's take a closer look at a few of these sewersheds to see why some of their areas appear downhill of the end point.
+
+### Suffolk (Co) SCSD #3 Southwest
+
+The below map shows the treatment plant for $$Suffolk (Co) SCSD #3 Southwest$$. There are a couple of compounding factors here. This is a coastal sewershed and their [website states](https://suffolkcountyny.gov/Departments/Public-Works/Sanitation/Sewer-District-No-3-Expansion-Feasibility-Study) that they utilize 14 remote pumping stations to overcome topography. Addtionally, the reported geolocation of the endpoint seems to be incorrect. The map shows the reported endpoint location as the blue pin. The actual endpoint location is likely within the red circle along the shoreline. In all liklihood, this particular sewershed does have more than 50% of its serviced area at higher elevations than the endpoint but it also uses a number of pumping stations.
+
+
+```{r}
+dh.filt <- topo.df%>%
+  filter(Pct_Uphill < 0.5)
+
+ep.dh <- ep%>%
+  filter(CWNS_ID %in% dh.filt$CWNS_ID)%>%
+  st_transform(4326)
+
+# Load Rasters for sewersheds, classify as uphill or downhill and mosaic them
+
+r <- terra::rast(here("Data/SS_DEMs/DEM_36001015014_.tif"))
+
+ep.select <- ep.dh%>%
+  filter(CWNS_ID=="36001015014")
+
+pal <- colorNumeric(terrain.colors(4), values(r),
+  na.color = "transparent")
+
+leaflet(ep.select)%>%
+  addProviderTiles("Esri.WorldImagery")%>%
+  addRasterImage(r,colors = pal, opacity = 0.5)%>%
+  addMarkers()%>%
+  addCircleMarkers(lat = 40.673212143933135, lng = -73.34283481617476, color = "red")%>%
+  addLegend(pal = pal, values = values(r),
+    title = "Elevation [m]")
+```
+
+
+### Seneca (Co) Five Points WWTP & CS - SD#2
+
+This is a particularly odd example as the endpoint is located within the decomissioned Seneca Army Depot. However, the service area extends into Romulus New York. There is a [proposal](https://dec.ny.gov/news/environmental-notice-bulletin/2021-11-17/seqr/seneca-county-seneca-county-as-lead-agency-has) to upgrade this plant, which also suggests that pumps are currently used.
+
+```{r}
+# Load Rasters for sewersheds, classify as uphill or downhill and mosaic them
+r <- terra::rast(here("Data/SS_DEMs/DEM_36008198002_.tif"))
+
+ep.select <- ep.dh%>%
+  filter(CWNS_ID=="36008198002")
+
+pal <- colorNumeric(terrain.colors(4), values(r),
+  na.color = "transparent")
+
+leaflet(ep.select)%>%
+  addProviderTiles("Esri.WorldImagery")%>%
+  addRasterImage(r,colors = pal, opacity = 0.5)%>%
+  addMarkers()%>%
+  #addCircleMarkers(lat = 40.673212143933135, lng = -73.34283481617476, color = "red")%>%
+  addLegend(pal = pal, values = values(r),
+    title = "Elevation [m]")
+```
+
+
+### Lake George (V) STP
+
+The Lake George treatment plant appears to be correctly located. This treatment plant is also serving a system that is along a major water body. It appears That the relationship between elevation and service areas seems to be influenced by wether a system borders a water body.
+```{r}
+# Load Rasters for sewersheds, classify as uphill or downhill and mosaic them
+r <- terra::rast(here("Data/SS_DEMs/DEM_36005046001_.tif"))
+
+ep.select <- ep.dh%>%
+  filter(CWNS_ID=="36005046001")
+
+pal <- colorNumeric(terrain.colors(4), values(r),
+  na.color = "transparent")
+
+leaflet(ep.select)%>%
+  addProviderTiles("Esri.WorldImagery")%>%
+  addRasterImage(r,colors = pal, opacity = 0.5)%>%
+  addMarkers()%>%
+  #addCircleMarkers(lat = 40.673212143933135, lng = -73.34283481617476, color = "red")%>%
+  addLegend(pal = pal, values = values(r),
+    title = "Elevation [m]")
+```
+
+
+# Testing the Influence of Water Bodies on Elevation
+
+Using the National Hydrogrophy Dataset, we import navigable waterways
+
+```{r nhdDist, eval=FALSE}
+# Load water body areas
+nhd.rivers <- st_read("D:/data/NHD/New_York/nhdplus_epasnapshot2022_ny.gdb",layer = "nhdarea_ny")%>%
+  filter(areasqkm>1)%>%
+  select(nhdplusid)%>%
+  st_transform(5070)
+
+nhd <- st_read("D:/data/NHD/New_York/nhdplus_epasnapshot2022_ny.gdb", layer = "nhdwaterbody_ny")%>%
+  filter(areasqkm > 1)%>%
+  select(nhdplusid)%>%
+  st_transform(5070)%>%
+  rbind(nhd.rivers)%>%
+  summarise()
+
+# Find the nearest large water body for each end point
+ep.near <- ep%>%
+  st_transform(5070)%>%
+  mutate(NHD_Dist = as.numeric(st_distance(.,nhd)))
+
+dist.df <- ep.near%>%
+  st_drop_geometry()%>%
+  select(CWNS_ID, NHD_Dist)
+
+vroom_write(dist.df, here("Analysis/NY_NHD_Dist.csv"), append = FALSE)
+```
+
+
+```{r}
+dist.df <- vroom(here("Analysis/NY_NHD_Dist.csv"), col_types = c("CWNS_ID"="c"))
+
+topo.dist <- topo.df%>%
+  left_join(dist.df)%>%
+  mutate(Dist_km = NHD_Dist/1000,
+         Dist_km = ifelse(Dist_km > 10,10,Dist_km))
+
+# Replot scatter by distance
+plot_ly(topo.dist)%>%
+  add_markers(x = ~Area_Km, y = ~Pct_Uphill*100, color = ~Dist_km,
+              hoverinfo = "text",
+              text = ~paste("CWNS ID: ",CWNS_ID,"<br>",
+                            "% Uphill: ",round(100*Pct_Uphill,1),"% <br>",
+                            "Sewershed Area: ",round(Area_Km,1)," km<sup>2</sup><br>",
+                            "Distance from Water: ",round(NHD_Dist/1000)," km"))%>%
+  layout(title= list(text = "% Uphill vs. Area"), 
+         xaxis = list(title = list(text ='Area (km<sup>2</sup>)')),
+         yaxis = list(title = list(text ='% of Sewershed Uphill')))
+```
+
+
+### Erie (C) SD#5 Clarence Research Park STP
+
+The Clarence Research Park treatment plant is 23 km away from a water body larger then 1 km^2^. This appears to be a bad location for the treatment plant, although this is a small system and I cannot find a likely treatment plant that would serve this area.
+
+```{r}
+# Load Rasters for sewersheds, classify as uphill or downhill and mosaic them
+r <- terra::rast(here("Data/SS_DEMs/DEM_36009082005_.tif"))
+
+ep.select <- ep.dh%>%
+  filter(CWNS_ID=="36009082005")
+
+pal <- colorNumeric(terrain.colors(4), values(r),
+  na.color = "transparent")
+
+leaflet(ep.select)%>%
+  addProviderTiles("Esri.WorldImagery")%>%
+  addRasterImage(r,colors = pal, opacity = 0.5)%>%
+  addMarkers()%>%
+  #addCircleMarkers(lat = 40.673212143933135, lng = -73.34283481617476, color = "red")%>%
+  addLegend(pal = pal, values = values(r),
+    title = "Elevation [m]")
+```
+
+
+## Pumping Stations
+
+```{r}
+pump <- vroom(here("Data/FACILITY_TYPES.txt"))%>%
+  filter(FACILITY_TYPE == "Collection: Pump Stations")%>%
+  filter(CWNS_ID %in% topo.dist$CWNS_ID)%>%
+  select(CWNS_ID)%>%
+  distinct()%>%
+  mutate(Pump = TRUE)
+
+pump.topo <- topo.dist%>%
+  left_join(pump)%>%
+  mutate(Pump = ifelse(is.na(Pump),FALSE,TRUE))
+
+
+plot_ly(pump.topo)%>%
+  add_markers(x = ~Area_Km, y = ~Pct_Uphill*100, color = ~Pump,
+              hoverinfo = "text",
+              text = ~paste("CWNS ID: ",CWNS_ID,"<br>",
+                            "% Uphill: ",round(100*Pct_Uphill,1),"% <br>",
+                            "Sewershed Area: ",round(Area_Km,1)," km<sup>2</sup><br>",
+                            "Distance from Water: ",round(NHD_Dist/1000)," km"))%>%
+  layout(title= list(text = "% Uphill vs. Area"), 
+         xaxis = list(title = list(text ='Area (km<sup>2</sup>)')),
+         yaxis = list(title = list(text ='% of Sewershed Uphill')))
+```
+

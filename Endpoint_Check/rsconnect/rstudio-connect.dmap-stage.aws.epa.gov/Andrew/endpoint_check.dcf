@@ -1,0 +1,12 @@
+name: endpoint_check
+title: Endpoint_Check
+username: Andrew
+account: Andrew
+server: rstudio-connect.dmap-stage.aws.epa.gov
+hostUrl: https://rstudio-connect.dmap-stage.aws.epa.gov/__api__
+appId: 479
+bundleId: 3066
+url: https://rstudio-connect.dmap-stage.aws.epa.gov/content/04f9f404-b924-4104-a15c-d2c7a8f68061/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
