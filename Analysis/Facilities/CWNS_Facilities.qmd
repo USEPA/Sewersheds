@@ -29,7 +29,7 @@ library(gt)
 2. Every location available should be used as a spatial clue.
 
 # Input Tables
-There are five relevant tables in the access database of technical information on locations
+There are several relevant tables in the access database of technical information on locations
 
 
 **NOT** safe to assume row in facilities_confirmed are all end point
@@ -65,15 +65,20 @@ df.1 <- fac%>%
   left_join(fac.locs, by = c("CWNS_ID","FACILITY_ID"))%>%
   left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))
 
-
 # Data captured after CWNS
 fac.cf <- vroom(here("data/FACILITIES_CONFIRMED.txt"), show_col_types = FALSE)%>%
   select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
 
-pop.cf <- vroom(here("data/POPULATION_WASTEWATER_CONFIRMED.txt"), show_col_types = FALSE)%>%
+# ERG went back and fixed many missing or incorrect locations.
+pop.cf <- vroom(here("data/POPULATION_WASTEWATER_CONFIRMED_updated06242024.csv"), show_col_types = FALSE)%>%
   mutate(ZIP_CODE = substr(ZIP_CODE,1,5))%>%
   select(!c(STATE_CODE,INFRASTRUCTURE_TYPE))
 
+# new.sf <- pop.cf%>%
+#   select(CWNS_ID,FACILITY_TYPE,TOTAL_RES_POPULATION_2022,LOCATION_TYPE,LATITUDE,LONGITUDE)%>%
+#   st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = st_crs(4269))
+# colnames(new.sf) <- c("CWNSID","FacType","Population","LocType","geometry")
+# st_write(new.sf,"D:/temp/Confirmed_New.gpkg", layer = "New", append = FALSE)
 
 # There is only one row for each CWNS_ID in this data, and it is assumed they are all treatment plants / endpoints
 df.2 <- fac.cf%>%
@@ -87,7 +92,7 @@ df.bind <- bind_rows(df.1,df.2)%>%
 
 ## Facility information
 
-These table list the facility names and types
+These tables list the facility names and types
 
 - 'FACILITIES': This table lists all facilities that were captured by the CWNS
 - 'FACILITIES_CONFIRMED': This table lists facilities that were confirmed to exist but were not originally captured by the CWNS. Data for these facilities may be out of date and/or incomplete.
@@ -105,14 +110,42 @@ These tables list the population served for each of the facilities listed in the
 
 Assume that sewersheds in the 'POPULATION_WASTEWATER_CONFIRMED' dataset are all end points. States were instructed to input locations of treatment plants. However, it is possible that if multiple facilities were listed such as a treatment plant and 'Collection: Pump Stations', that the location input may refer to a different facility. Only one location was input for each CWNS_ID.
 
+## Discharges
+
+- 'DISCHARGES': lists the percent of effluent that is discharged to other facilities. We want to use this table to help identify end points.
+
 # Identifying the Universe of End Point Treatment Plants
+We assume that confirmed facilities (Not in CWNS) are all endpoints. 
 
 - facility type contains “treatment plant”
 - Residential population > 0
+- Percent of Discharge is set to be < 50% (This value can be changed)
+
+*I have confirmed that the discharge data contains no cases where a facility discharges to another facility with the same CWNS_ID.*
 
 ```{r endTreat}
+discharge <- vroom(here("Data/DISCHARGES.csv"), col_names = c("CWNS_ID","FACILITY_ID","STATE_CODE","DISCHARGE_TYPE","PRESENT_DISCHARGE_PERCENTAGE","PROJECTED_DISCHARGE_PERCENT","DISCHARGES_TO_CWNSID","DISCHARGES_NOTES"))%>%
+  select(CWNS_ID,DISCHARGE_TYPE,PRESENT_DISCHARGE_PERCENTAGE)%>%
+  group_by(CWNS_ID)%>%
+  mutate(PRESENT_DISCHARGE_PERCENTAGE = sum(PRESENT_DISCHARGE_PERCENTAGE,na.rm = TRUE))%>%
+  ungroup()%>%
+  distinct()
+
+# First cut
 treatment.end <- df.bind%>%
-  filter(TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant")
+  left_join(discharge)%>%
+  filter(TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant")%>%
+  mutate(PRESENT_DISCHARGE_PERCENTAGE = replace_na(PRESENT_DISCHARGE_PERCENTAGE,0))%>%
+  mutate(drop = ifelse(DISCHARGE_TYPE == "Discharge To Another Facility" & PRESENT_DISCHARGE_PERCENTAGE > 50, TRUE,FALSE))%>%
+  filter(drop == FALSE)%>%
+  select(!DISCHARGE_TYPE)%>%
+  distinct()
+
+sf <- treatment.end%>%
+  drop_na(LATITUDE, LONGITUDE)%>%
+  st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = 4326)
+
+#st_write(sf, here("Data/endpoints.gpkg"), layer = "ep_08012024")
 ```
 
 ### Are any treatment end points missing locations?
@@ -123,10 +156,9 @@ missing.end <- treatment.end%>%
   select(CWNS_ID,FACILITY_NAME,STATE_CODE,TOTAL_RES_POPULATION_2022)%>%
   distinct()%>%
   arrange(desc(TOTAL_RES_POPULATION_2022))
-
 ```
 
-There are `r format(nrow(missing.end),big.mark=",")` CWNS_IDs that have missing or incomplete location data that represent end point treatment facilities. All facilities that are either missing a location or residential population are from the 'CONFIRMED' files which were not captured within the CWNS.
+There is/are `r format(nrow(missing.end),big.mark=",")` CWNS_IDs that have missing or incomplete location data that represent end point treatment facilities. All facilities that are either missing a location or residential population are from the 'CONFIRMED' files which were not captured within the CWNS.
 
 ```{r missingByState}
 ggplot(missing.end)+
@@ -242,5 +274,27 @@ gt(head(ct))%>%
 - New Jersey
 - Vermont
 - Massachusetts
+
+### Matching Systems
+
+```{r}
+df.match <- vroom(here("Data/Matched_POTWS.csv"))%>%
+  select(CWNS_ID,STATE_CODE)%>%
+  group_by(STATE_CODE)%>%
+  summarise(nMatches = n())
+
+prcnt.match <- sf.end%>%
+  st_drop_geometry()%>%
+  filter(STATE_CODE %in% df.match$STATE_CODE)%>%
+  group_by(STATE_CODE)%>%
+  summarise(nSystems = n())%>%
+  left_join(df.match)%>%
+  mutate(Percent = 100*(nMatches/nSystems))
+
+ggplot(prcnt.match)+
+  geom_col(aes(x = Percent, y = fct_reorder(STATE_CODE,Percent)))+
+  labs(title = "Percent of Systems Matched to Polygons",
+       y = "State")
+```
 
 
