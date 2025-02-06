@@ -1,0 +1,91 @@
+---
+title: "Summary of Model Results"
+format:
+  html:
+    code-fold: true
+    code-summary: "Show the code"
+---
+
+### UPDATED: December 19, 2024
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(vroom)
+library(tidyverse)
+library(plotly
+        )
+train <- vroom("training.csv")
+  
+test <- vroom("predicted_top10.csv")
+
+sensitivity.df <- vroom("sensitivity_sewered.csv")
+
+```
+
+
+## Sewered vs. Non-Sewered
+
+The first set of models we ran were designed to determine the probability that a hexagon was sewered or non-sewered. Hexagons for the training and testing sets were randomly sampled from the 49 counties that were determined to have accurate and comprehensive sewershed data. The random sampling was stratified by sewered/non-sewered to preserve the proportion of sewered and non-sewered hexagons in the training and testing sets. The split counts were:
+
+```{r countTable}
+c.df <- data.frame(Dataset = c("Training","Testing"),
+                   Sewered = c("10,436","10,437"),
+                   "Non-Sewered" = c("33,627","33,627"),
+                   Total = c("44,063","44,064"))
+gt::gt(c.df)
+```
+
+
+## Model Parameters
+
+We performed 500 random permutations of random forest models with the following ranges for inputs:
+
+- \# of Trees: 50 - 2,000
+- mTry: 2 - 21
+- \# of Predictors: 5 - 21
+- Minimum n for split: 10 - 500
+
+Upon review of the models we found that (in general) the best performing models incorporated the largest number of predictors, but that the number of trees did not greatly affect accuracy when forests were grown to > 500 trees.
+
+The value of mTry was positively correlated with model accuracy until about a value of 15 when it leveld off. Optimum mTry values appear to be between 10-15.
+
+The minimum n for split was negatively correlated with model accuracy, but does not significantly decrease model efficacy. We should target a minimum n around 100.
+
+## Evaluating Accuracy
+
+There are three primary metrics we used to evaluate model accuracy: AUC, Sensitivity, and Specificity. The AUC is a measure of the model's ability to distinguish between sewered and non-sewered hexagons. Sensitivity is the proportion of true positives that are correctly identified by the model. Specificity is the proportion of true negatives that are correctly identified by the model. The AUC values for the top ten performin models all hover around 0.985, which represent very good models. For a closer look at the trade offs between sensitivity and specificity, we can plot the results based on a range of threshold values used to classify sewered and non-sewered hexagons. The default threshold is for any hexagon with a probability of >= 0.5 to be assigned as sewered. We have observed that as this threshold, we see higher values of specificity, meaning that these models over-predict the number of sewered hexagons.
+
+
+```{r}
+
+plot_ly(sensitivity.df)%>% 
+  add_lines(x = ~Threshold, y = ~Sensitivity, color = ~Model, group = ~Model,
+            text = ~paste0("<b>Sensitivity (True Sewered)</b><br>",
+                           "Model: ",Model,"<br>",
+                           "Accuracy: ",round(100*Accuracy,2),"<br>",
+                           "Sensitivity: ",round(100*Sensitivity,2),"<br>",
+                           "Specificity: ",round(100*Specificity,2)),
+            hoverinfo = 'text')%>%
+  add_lines(x = ~Threshold, y = ~Specificity, color = ~Model, group = ~Model,
+            text = ~paste0("<b>Specificity (True Non-Sewered)</b><br>",
+                           "Model: ",Model,"<br>",
+                           "Accuracy: ",round(100*Accuracy,2),"<br>",
+                           "Sensitivity: ",round(100*Sensitivity,2),"<br>",
+                           "Specificity: ",round(100*Specificity,2)),
+            hoverinfo = 'text')%>%
+  add_lines(x = ~Threshold, y = ~Accuracy, color = ~Model, group = ~Model, linetype = ~Model,
+            text = ~paste0("<b>Total Model Accuracy</b><br>",
+                           "Model: ",Model,"<br>",
+                           "Accuracy: ",round(100*Accuracy,2),"<br>",
+                           "Sensitivity: ",round(100*Sensitivity,2),"<br>",
+                           "Specificity: ",round(100*Specificity,2)),
+            hoverinfo = 'text')%>%
+  layout(title = "Model Sensitivity and Specificity",
+         xaxis = list(title = "Probability Threshold"),
+         yaxis = list(title = "Accuracy / Sensitivity / Specificity"),
+         showlegend = FALSE)
+```
+
+
+
+

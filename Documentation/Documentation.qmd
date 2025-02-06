@@ -1088,6 +1088,64 @@ We calculated the total road distance within each hexagon in meters.
 
 One of the reasons we are using H3 hexagons is because their shape allows for quick and efficient neighborhood or traversal calculations. Hexagons are superior to squares because they have more directional options and given the derived input variables we have already created, it becomes easy to quickly determine information about the surrounding area. For example, when calculating distance to the nearest treatment plant, we can navigate using a simplified road network via the hexagons. This allows the model to have a better understanding of distance to the nearest treatment plant and prevents the model from assuming that a sewer network passes through undeveloped areas or areas of water.
 
+- Multiple levels (1-3 hexagon neighborhoods)
+  - Did sewer exist in 1990?
+  - Population Density
+  - Buildings
+  - NLCD
+
+## Determining Maximum Search Distance
+
+To conserve computation time, we restrict the hexagons we consider for sewersheds based on an analysis of maximum distance for sewer served areas from associated treatment endpoints. For detailed information, refer to 'Analysis/Endpoint_Sewershed_Distance/Endpoint_Sewershed_Distance.html'. The following code was used to determine the maximum search distance (in hexagons) for our hexagons. We found a k_ring distance (radius) of 90 hexagons to equal a radius of 32.1 kilometers, which equals the 99th percentile of maximum distance found in our analysis.
+
+```{r}
+# get a hexagon for the center point of UTM Zone 17N (minimizes distortion)
+cp <- st_sf(geometry = st_sfc(st_point(c(-1326954.01,6505062.6)), crs = 26917))%>%
+  st_transform(4326)
+
+cp.coords <- st_coordinates(cp)
+
+hex.id <- geo_to_h3(c(55.135, -110.14), 9)
+
+# Iterate over radii to determine value closest to 32 km.
+
+radius.dists <- data.frame()
+
+for(n in seq(85,95)){
+  # Get neighbors
+  neighbors <- k_ring(hex.id, radius = n)
+  
+  # Get sf hexagons and project to UTM 17N then summarize
+  neighbors.sf <- h3_to_geo_boundary_sf(neighbors)%>%
+    st_transform(st_crs(26917))%>%
+    summarise()%>%
+    st_make_valid()
+  
+  # Get bounding box
+  
+  bb <- st_bbox(neighbors.sf)
+  
+  height <- (bb$ymax - bb$ymin)/1000
+  width <- (bb$xmax - bb$xmin)/1000
+
+  radius <- mean(c(height, width))/2
+  
+  newRow <- data.frame(K_Ring = n, Radius_km = radius)
+  
+  radius.dists <- rbind(radius.dists, newRow)
+  
+  print(paste0("Completed ",n))
+}
+
+ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
+  geom_line()+
+  geom_point()+
+  geom_hline(yintercept = 32, linetype = "dashed", color = "red")+
+  labs(title = "Radius of H3 Hexagons vs. K-Ring",
+       x = "K-Ring",
+       y = "Radius (km)")
+```
+
 
 
 ### H3 Navigation Example
@@ -1096,6 +1154,7 @@ By extracting the roads to each hexagon, we can start to classify based on road 
 
 ```{r classifyHexRoads, eval = FALSE}
 library(h3)
+library(osmdata)
 # Create Nav Points
 s.coords <- data.frame(x= -72.5850351,y=42.8359840)
 start <- st_as_sf(s.coords,coords = c("x","y"),crs = st_crs(4326))
