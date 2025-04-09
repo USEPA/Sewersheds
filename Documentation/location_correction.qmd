@@ -1,0 +1,154 @@
+---
+title: "Endpoint Correction"
+format: pdf
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE)
+
+library(tidyverse)
+library(sf)
+library(vroom)
+library(here)
+swr <- st_read(here("Data/Validation/Validation_04022025.gpkg"), layer = "Sewersheds", quiet = TRUE)
+ep <- st_read(here("Data/endpoints_04042025.shp"), quiet = TRUE)%>%
+  filter(CWNS_ID %in% swr$CWNS_ID) # Keep only endpoints associated with sewersheds)
+
+```
+
+
+
+## Methods for correcting endpoint locations
+
+Through review of CWNS data, we have found that many endpoint locations are reported incorrectly. A variety of efforts have been undertaken to correct these locations, including:
+
+- Manual search for correct locations
+- Use of POI geocoding
+- Use of Address Geocoding
+- Distance measurement from associated sewersheds.
+
+For sewersheds that have been matched to endpoints, we measure the distance between them. If endpoint locations are far from the sewersheds, we use a geocode to determine a secondary location. We then measure the distance between the two endpoint locations and review to determine which location, if any, is correct. For roughly 250 locations, a POI geocode was returned for a utility type location. These were reviewed and substituted for original locations. Here, we document additional geocoding efforts for endpoints associated with sewersheds that are candidates for the training data.
+
+### Measure Distance from Sewershed to Associated Endpoint
+
+```{r}
+dists <- ep%>%
+  mutate(Distance_km = NA)
+
+for(n in 1:nrow(dists)){
+  # Get the current endpoint
+  current_ep <- st_transform(dists[n, ],st_crs(5070))
+  
+  # Find the associated sewershed
+  associated_shed <- swr %>%
+    filter(CWNS_ID == current_ep$CWNS_ID)%>%
+    st_transform(st_crs(5070))
+  
+  tryCatch({
+    dists$Distance_km[n] <- as.numeric(st_distance(current_ep, associated_shed))[1]/1000
+  }, error=function(e){})
+  
+}
+
+# Plot histogram of Distances > 1 Km
+gt1 <- dists%>%
+  filter(Distance_km > 1)
+
+ggplot(gt1)+
+  geom_histogram(aes(x = Distance_km), 
+                 bins = 30, 
+                 fill = "steelblue", 
+                 color = "black") +
+  labs(title = "Histogram of Endpoint Distances from Associated Sewersheds",
+       x = "Distance (km)",
+       y = "Count") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5, size = 14),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(size = 12),
+    panel.grid.major = element_line(color = "grey80"),
+    panel.grid.minor = element_blank()
+  )
+  
+  
+  
+```
+
+We found 114 location more than a kilometer from their respective sewersheds. These locations are then geocoded to review possible alternate locations.
+
+### Create geocode table
+Using address information derived from the CWNS, we create a table to geocode the addresses.
+
+```{r gcodeTbl, eval = FALSE}
+
+locs <- vroom(here("Data/PHYSICAL_LOCATION.txt"))%>%
+  filter(CWNS_ID %in% gt1$CWNS_ID)%>%
+  select(CWNS_ID,ADDRESS,ADDRESS_2,CITY,STATE_CODE,ZIP_CODE)
+
+write.csv(locs,here("Data/ep_2_geocode.csv"), row.names = FALSE, na = "", fileEncoding = "UTF-8")
+
+```
+
+
+```{r gCodeResults}
+gcode <- read.csv(here("Data/ep_geocoded.csv"))%>%
+  select(USER_CWNS_ID,Score,Match_type,Addr_type,Type,X,Y)
+
+ggplot(gcode)+
+  geom_point(aes(x = Score, y = Addr_type))+
+  labs(x = "Score", y = "Match Type", title = "Geocode Results")
+```
+
+The next step is to measure the distance between point locations for the same end point. We'll draw lines between each pair and review each loaction in ArcGIS.
+
+### Measure and Create Lines
+
+```{r measureResults, eval = FALSE}
+gcode.sf <- gcode%>%
+  st_as_sf(coords = c("X","Y"), crs = 4326, remove = FALSE)%>%
+  st_transform(st_crs(5070))
+
+lines <- data.frame()
+
+for(n in 1:nrow(gcode.sf)){
+  pt1 <- gcode.sf[n, ]%>%
+    select(USER_CWNS_ID)
+  colnames(pt1)[1] <- "CWNS_ID"
+  pt2 <- gt1%>%
+    filter(CWNS_ID == pt1$CWNS_ID)%>%
+    select(CWNS_ID)%>%
+    st_transform(st_crs(5070))
+  
+  line <- rbind(pt1,pt2)%>%
+    summarise()%>%
+    st_cast("LINESTRING")%>%
+    mutate(CWNS_ID = pt1$CWNS_ID)
+  
+  lines <- rbind(lines,line)
+}
+
+# Save for review
+lines.out <- lines%>%
+  mutate(Distance_km = as.numeric(st_length(.))/1000)%>% # Convert to kilometers
+  st_transform(4326)
+
+gcode.sel <- gcode.sf%>%
+  mutate(Type = "Geocode")%>%
+  select(USER_CWNS_ID,Type)%>%
+  st_transform(st_crs(4326))
+colnames(gcode.sel)[1] <- "CWNS_ID"
+
+pts.sel <- gt1%>%
+  mutate(Type = "CWNS Location")%>%
+  select(CWNS_ID,Type)%>%
+  st_transform(st_crs(4326))%>%
+  rbind(gcode.sel)
+
+st_write(pts.sel,here("Data/Geocode_Compare.gpkg"), layer = "Points")
+st_write( lines.out, here("Data/Geocode_Compare.gpkg"), layer = "Lines")
+```
+

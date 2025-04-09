@@ -4,7 +4,7 @@ format:
   html:
     toc: true
     toc-location: left
-    toc-depth: 3
+    toc-depth: 2
     toc-expand: true
     code-fold: true
     code-summary: 'Show Code'
@@ -17,6 +17,9 @@ library(vroom)
 library(sf)
 library(here)
 library(leaflet)
+library(h3)
+library(gt)
+library(plotly)
 
 knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
@@ -1066,6 +1069,8 @@ For buildings where height was not available, we applied a value of 4.5 meters, 
 The National Land Cover Database was used to derive characteristics for each hexagon. Data was obtained in raster format from [MRLC](https://www.mrlc.gov/) and pixels were extracted to each hexagon. We determined the mode (maximum frequency) of each land cover type within each hexagon.
  
  We also derived impervious surface using the median and mean impervious surface percentage within each hexagon.
+ 
+ 
 
 
 ## Road Networks
@@ -1098,7 +1103,7 @@ One of the reasons we are using H3 hexagons is because their shape allows for qu
 
 To conserve computation time, we restrict the hexagons we consider for sewersheds based on an analysis of maximum distance for sewer served areas from associated treatment endpoints. For detailed information, refer to 'Analysis/Endpoint_Sewershed_Distance/Endpoint_Sewershed_Distance.html'. The following code was used to determine the maximum search distance (in hexagons) for our hexagons. We found a k_ring distance (radius) of 90 hexagons to equal a radius of 32.1 kilometers, which equals the 99th percentile of maximum distance found in our analysis.
 
-```{r}
+```{r radiusDistance, eval = FALSE}
 # get a hexagon for the center point of UTM Zone 17N (minimizes distortion)
 cp <- st_sf(geometry = st_sfc(st_point(c(-1326954.01,6505062.6)), crs = 26917))%>%
   st_transform(4326)
@@ -1137,15 +1142,30 @@ for(n in seq(85,95)){
   print(paste0("Completed ",n))
 }
 
+write.csv(radius.dists, here("Documentation/Data/Radius_Distances.csv"), row.names = FALSE)
+
 ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
   geom_line()+
   geom_point()+
   geom_hline(yintercept = 32, linetype = "dashed", color = "red")+
+  scale_x_continuous(breaks = seq(85,95,1))+
   labs(title = "Radius of H3 Hexagons vs. K-Ring",
        x = "K-Ring",
        y = "Radius (km)")
 ```
 
+```{r radiusPlot, echo = FALSE}
+radius.dists <- read.csv(here("Documentation/Data/Radius_Distances.csv"))
+
+ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
+  geom_line()+
+  geom_point()+
+  geom_hline(yintercept = 32, linetype = "dashed", color = "red")+
+  scale_x_continuous(breaks = seq(85,95,1))+
+  labs(title = "Radius of H3 Hexagons vs. K-Ring",
+       x = "K-Ring",
+       y = "Radius (km)")
+```
 
 
 ### H3 Navigation Example
@@ -1153,7 +1173,6 @@ ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
 By extracting the roads to each hexagon, we can start to classify based on road type to give us a more accurate view of how sewers move through towns and cities. For example, we know that sewers usually follow road networks, but are less likely to follow certain road types such as interstate highways and dirt roads. In the first map below, we can see an example of an area in New York with hexagons classified by their most major road type (ignoring interstates and unclassified roads). Imagine the green point represents a home served by sewer and the red dot represents the treatment plant. We can see a straight line distance between the two points travels through undeveloped area.
 
 ```{r classifyHexRoads, eval = FALSE}
-library(h3)
 library(osmdata)
 # Create Nav Points
 s.coords <- data.frame(x= -72.5850351,y=42.8359840)
@@ -1215,10 +1234,10 @@ st_write(end,here("Documentation/Data/hex_examples.gpkg"), layer = "end", append
 st_write(line,here("Documentation/Data/hex_examples.gpkg"), layer = "line", append = FALSE)
 ```
 ```{r classMap}
-hex.hwy <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "hex_hwy")
-start <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "start")
-end <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "end")
-line <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "line")
+hex.hwy <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "hex_hwy", quiet = TRUE)
+start <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "start", quiet = TRUE)
+end <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "end", quiet = TRUE)
+line <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "line", quiet = TRUE)
 
 # Create highway palette
 f.pal <- colorFactor(
@@ -1315,7 +1334,7 @@ st_write(nav.smooth,here("Documentation/Data/hex_examples.gpkg"), layer = "navSm
 ```
 
 ```{r navMap}
-nav.smooth <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "navSmooth")
+nav.smooth <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "navSmooth", quiet = TRUE)
 
 leaflet()%>%
   addProviderTiles("Esri.WorldImagery")%>%
@@ -1325,4 +1344,294 @@ leaflet()%>%
   addPolylines(data = line, color = "#27d8db",weight = 3, opacity = 1)%>%
   addPolylines(data = nav.smooth, color = "#34d15e", weight = 3, opacity = 1)
 ```
+
+
+
+# Machine Learning
+
+## Feature Engineering
+
+```{r loadTraining}
+tt.df <- vroom(here("Documentation/Data/Training_Testing.csv"))
+```
+
+
+A critical step in building a good model is reviewing the distributions of the data to be used as explanatory variables. In some cases, transformations may need to be applied to ensure that the model can make the best use of the data. This may take the form of applying a function to normalize a distribution, or convert a numerical variable to a categorical one. This process is referred to as 'feature engineering; where the explanatory variables are referred to as 'features'. In this section, we describe and show the steps taken to prepare the input data.
+
+
+### Splitting Data into Training and Testing Sets
+Following our review of state supplied sewershed boundaries, 49 counties were identified as having complete and accurate service areas. We randomly selected 25 of these counties to be used for the training set. The remaining 24 counties were set aside for model testing. As we review input features for the model, we focus on two objectives:
+
+1. To ensure values in the testing dataset should resemble the values in the training set. Without a representative sample, the model will struggle to effectively estimate sewer service.
+
+2. To determine the distributions of each feature and determine if transformations should be applied.
+
+
+### Overview of Data and Modeling Strategy
+As previously discussed, we have identified 32 miles as the cutoff beyond which a treatment plant is unlikely to serve a community. To this end, the model will consider characteristics of any sewer collection system within 32 miles for each hexagon. Each row of data therefore represents a single relationship between a single hexagon and a single endpoint. The goal of the model is to predict whether or not that endpoint is associated with a sewershed which serves that hexagon. If a hexagon is within 32 miles of multiple endpoints, it will have multiple rows of data. The row that returns the highest probability will be considered the most likely endpoint for that hexagon. Once the most likely endpoint is identified, the probability will be compared with a cutoff value. Generally, most models use a probability of 0.5 (50%). However, we will determine the optimum threshold through model tuning (described later). If the probability for the most likely endpoint is above the threshold, we assign it to the sewershed assosciated with the corresponding endpoint. If none of the endpoints reach the threshold, the hexagon is determined to be 'Non-Sewered'.
+
+When splitting the data, we make sure the proportion of 'TRUE' and 'FALSE' values are similar. The plot below shows the distributions between sets are indeed similar, which is a good first indicator. However, we see a clear imbalance between the two classes (TRUE & FALSE). We expect this since we know that we have multiple rows for many hexagons and with a radius of 32 miles, most hexagons will not be served by the endpoint they are compared with. This problem is referred to as the 'Class Imbalance Problem'. The issue is that our goal is to map sewersheds, and the nature of the random forest model is to minimize total error, regardless of the class. This means that the model will be biased towards predicting 'FALSE' for most hexagons, which is not what we want. To address this, we will under-sample the 'FALSE' class to balance the outcomes with 'TRUE'. Again, it is critical that we do so in a representative way. 
+
+
+```{r trainTestPlot}
+ggplot(tt.df)+
+  geom_bar(aes(x = Correct_CWNS, stat = "count"))+
+  facet_wrap(~Set)+
+  labs(title = "Proportion of Correct to Incorrect Endpoints",
+       x = "Correct Endpoint",
+       y = "# of Hexagons")
+```
+
+### Balancing Training Outcomes
+Our primary concern is the fitting of the model to the training set. We don't need to under sample the testing set because we are not using it to fit the model. An alternative use of the excess testing data is to bin the FALSE  classes into separate testing sets to evaluate effects. The table below shows the number of 'TRUE' values to be ~20,000 in the training and testing sets, which is the value we will use to sample the 'FALSE' class within the training set. We have to be particularly careful here because if our sample includes to many hexagons that are are a greater distance from the endpoint, we may throw off the similarities of the data values. Conversely, we must not exclude farther hexagons excessively or we will not be able to effectively model larger or more disperse systems.
+
+```{r classCount}
+# Count number of TRUE and FALSE values between sets
+tt.df.count <- tt.df%>%
+  group_by(Set,Correct_CWNS)%>%
+  summarise(n = n())%>%
+  ungroup()
+
+gt(tt.df.count)%>%
+  tab_header(title = "Count of TRUE and FALSE Values")%>%
+  cols_label(Set = "Set",
+             Correct_CWNS = "Correct Endpoint",
+             n = "# of Hexagons")%>%
+  cols_align(align = "center", columns = everything())%>%
+  tab_options(table.width = px(400))
+```
+
+         
+         
+#### Under-Sampling
+
+To determine the relationships between training and testing and the effect of under-sampling, we will plot the distributions of each variable side-by-side for the original training set, the under-sampled training set and the testing set.
+
+```{r underSample, eval = FALSE}
+# Subset training + False
+train.false <- tt.df%>%
+  filter(Set == "Training" & Correct_CWNS == "FALSE")
+
+# Randomly Sample Rows to return row indices (No Duplicates)
+set.seed(123)
+u.sample <- sample(seq(1,nrow(train.false)), size = 20000, replace = FALSE)
+
+# Create replacement FALSE rows
+u.rows <- train.false[u.sample,]
+
+# Re-Combine TRUE with under sampled FALSE
+train.u <- tt.df%>%
+  filter(Set == "Training" & Correct_CWNS == "TRUE")%>%
+  rbind(u.rows)%>%
+  mutate(Set = "Training_UnderSampled")
+
+
+# Create combined Dataset to generate plots
+compare.sets <- tt.df%>%
+  rbind(train.u)
+
+
+# Create a list of variables to plot
+var.list.n <- c("TOTAL_RES_POPULATION_2022","Near_Rank","distance","nBldgs",
+         "HU_90","HU_20","Pct_Sewer_90","EP_Elevation","EP_Elev_Dif",
+         "Imprv_Med","Strt_Dist","SQ_Dist","Pop_2020","Pop_B","THU_B","Urban_B","Bldgs_B","Med_Bldg_Height",
+         "Mean_Bldg_Height","Med_Bldg_Area","Mean_Bldg_Area","Imprv_Mean",
+         "Pop_3","THU_3","Urban_Pop_3","OHU_90_3","Pub_W_90_3","Pub_S_90_3",
+         "nBldgs_3","Imprv_Med_3","mean_Elev_3","Pop_9","THU_9",
+         "Urban_Pop_9","OHU_90_9","Pub_W_90_9","Pub_S_90_9","nBldgs_9","Imprv_Med_9","mean_Elev_9")
+
+var.list.f <- c("Urban_Rural","NLCD_Class","NLCD_3","NLCD_9")
+library(scales)
+
+for(n in 1:length(var.list.n)){
+  # Create a plot for each variable
+  p <- ggplot(compare.sets)+
+    geom_histogram(aes_string(x = var.list.n[n], fill = "Set"), color = "black")+
+    scale_fill_manual(values = c("#ED9B40","#44CCFF","#745296"))+
+    #scale_x_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+    #scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+    labs(title = paste0("Distribution of ",var.list.n[n]),
+         x = var.list.n[n],
+         y = "# of Hexagons")+
+    facet_wrap(~Set, ncol = 3, scales = "free")+
+    theme(legend.position = "Bottom")
+  
+  # Save Plot
+  ggsave(here("Documentation/Plots/",paste0(var.list.n[n],".png")), plot = p, width = 6, height = 6,
+         dpi = 500)
+}
+
+for(n in 1:length(var.list.f)){
+  # Create a plot for each variable
+  p <- ggplot(compare.sets)+
+    geom_bar(aes_string(x = var.list.f[n], fill = "Set"), color = "black")+
+    scale_fill_manual(values = c("#ED9B40","#44CCFF","#745296"))+
+    #scale_x_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+    #scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
+    labs(title = paste0("Distribution of ",var.list.f[n]),
+         x = var.list.f[n],
+         y = "# of Hexagons")+
+    facet_wrap(~Set, ncol = 3, scales = "free")+
+    theme(legend.position = "Bottom")
+  
+  # Save Plot
+  ggsave(here("Documentation/Plots_f/",paste0(var.list.f[n],".png")), plot = p, width = 7, height = 6,
+         dpi = 500)
+}
+
+```
+
+
+#### Numerical Predictors
+
+```{r}
+#| output: asis
+img_files <- fs::dir_ls("Plots", glob="*.png")
+cat("::: {layout-ncol=2}\n",
+    glue::glue("![]({img_files})\n\n\n"),
+    ":::",
+    sep = ""
+)
+```
+
+
+A review of the above plots indicates that the overall distributions are similar between the three datasets, indicating that our new 'balanced' dataset has resolved it's imbalanced class problem, while maintaining a representative distribution of the original training dataset and the testing dataset. Therefore we can continue with model training for these numerical predictors.
+
+#### Categorical Predictors
+```{r}
+#| output: asis
+img_files <- fs::dir_ls("Plots_f", glob="*.png")
+cat("::: {layout-ncol=2}\n",
+    glue::glue("![]({img_files})\n\n\n"),
+    ":::",
+    sep = ""
+)
+```
+
+### Sewershed Population Served
+Variable Label: 'TOTAL_RES_POPULATION_2022'
+
+
+#### 
+```{r popServedEngineering}
+
+```
+
+         
+### Manhatten Distance
+Variable Label: 'distance'
+
+### Straight Distance
+
+### Squirrel Distance
+
+### Building Metrics
+
+#### Building Count
+Variable Label: 'nBldgs'
+
+#### Building Area
+Variable Labels: 'Med_Bldg_Area', 'Mean_Bldg_Area'
+
+#### Building Height
+Variable Labels: 'Med_Bldg_Height', 'Mean_Bldg_Height'
+
+### 1990 Housing Units
+Variable Label: 'HU_90'
+
+### 2020 Housing Units
+Variable Label: 'HU_20'
+
+### 1990 % Sewer
+Variable Label: 'Pct_Sewer_90'
+
+### 2020 Population
+Variable Label: 'Pop_2020'
+
+### Urban / Rural Census Classification
+Variable Label: 'Urban_Rural'
+
+### Land Cover
+Variable Label: 'NLCD_Class'
+!['Bins for NLCD classifications'](img/NLCD_Class.png)
+
+### Endpoint Elevation
+Variable Label: 'EP_Elevation'
+
+### Elevation Difference
+Variable Label: 'EP_Elev_Dif'
+
+### Impervious Surface
+Variable Label: 'Imprv_Med', 'Imprv_Mean'
+
+
+### Metrics to Describe Area Between Hexagon and Endpoint
+Variable Labels: 'Pop_B', 'THU_B', 'Urban_B', 'Bldgs_B'
+
+
+### Metrics to Describe the Area Surrounding each Hexagon
+
+#### Radius of 3
+Variable Labels: 'Pop_3', 'THU_3', 'Urban_Pop_3', 'OHU_90_3', 'Pub_W_90_3', 'Pub_S_90_3', 'nBldgs_3', 'NLCD_3', 'Imprv_Med_3', 'mean_Elev_3'
+
+#### Radius of 9
+Variable Labels: 'Pop_9', 'THU_9', 'Urban_Pop_9', 'OHU_90_9', 'Pub_W_90_9', 'Pub_S_90_9', 'nBldgs_9', 'NLCD_9', 'Imprv_Med_9', 'mean_Elev_9'
+
+
+
+
+
+## Model Tuning
+
+To determine the best model parameters, a grid search approach is used. This involves generating random parameter values within a range and using permutations of those combinations to train hundreds of models. We then evaluate the performance of the models to determine the best parameter combinations and start to identify variables of importance. The approach we used randomizes the number of trees between 10 and 1,010 (using intervals of 100) and mTry between 2 and 10. Each model includes the same base predictors, but also includes three additional predictors selected at random. Base predictors in every model include: 'TOTAL_RES_POPULATION_2022' 'Near_Rank', 'distance' 'nBldgs' 'HU_90' 'HU_20' 'Pct_Sewer_90' 'Urban_Rural' 'NLCD_Class' 'EP_Elevation' 'EP_Elev_Dif' and 'Imprv_Med'.
+
+```{r tuningResults}
+tune.files <- list.files(here("Data/Tuning"), full.names = TRUE)
+tune.df <- vroom(tune.files)%>%
+  distinct()
+
+add.vars <- tune.df%>%
+  select(Vars)%>%
+  separate(Vars, into = letters[1:16],sep = "\\+")%>%
+  mutate(Added = paste0(n,", ",o,", ",p))
+
+tune.df$Added <- add.vars$Added
+
+plot_ly(tune.df, x = ~mTry, y = ~Trees, z = ~TPR, color = ~Accuracy, colors = c("#440154FF", "#21908CFF", "#FDE725FF"), type = "scatter3d", mode = "markers",
+        text = ~paste0("Trees: ",Trees,"<br>",
+                       "mTry: ", mTry,"<br>",
+                       "TPR: ",round(100*(TPR),2),"%<br>",
+                       "Added Variables: ",Added),
+        hoverinfo = "text")%>%
+  layout(title = "Model Tuning Results",
+         scene = list(xaxis = list(title = "mTry"),
+                      yaxis = list(title = "nTrees"),
+                      zaxis = list(title = "True Positive %")))
+```
+
+
+
+### Accuracy Related to Additional Variables
+
+```{r}
+# Create data frame of all variables that were added
+var.impact <- tune.df%>%
+  separate(Added, into = c("Add_1","Add_2","Add_3"), sep = ", ")
+  # pivot_longer(cols = c(Add_1,Add_2,Add_3), names_to = "Added_Position", values_to = "Added_Var")%>%
+  # select(!Vars)
+
+# Plot added var by TPR and color by trees
+plot_ly(var.impact)%>%
+  add_markers(x = ~Add_1, y = ~Add_2, z = ~Add_3, color = ~TPR,
+              text = ~paste0("Added Variables: ",Add_1," + ",Add_2," + ",Add_3,"<br>",
+                             "TPR: ",round(100*(TPR),2),"%<br>",
+                             "Trees: ",Trees,"<br>",
+                             "mTry: ",mTry,"<br>"),
+              hoverinfo = "text")%>%
+  layout(title = "Variables Added to Base Model",
+         yaxis = list(title = ""),
+         xaxis = list(title = ""),
+         zaxis = list(title = ""))
+```
+
 
