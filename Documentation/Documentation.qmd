@@ -25,36 +25,66 @@ knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 ```
 
 
-This document serves as an outline for all analysis and step documentation for modeling sewershed boundaries. You may need to refer to other documents for more specific information relating to specific steps, which will be noted where applicable.
 
+## Executive Summary
 
-## Endpoints
+>"The [Clean Watershed Needs Survey(CWNS)](https://www.epa.gov/cwns/clean-watersheds-needs-survey-cwns-2022-report-and-data)provides an assessment of the capital investments necessary for states, the District of Columbia, and U.S. Territories to meet the Clean Water Act’s (CWA) water quality goals over the subsequent 20 years. These needs include projects and related infrastructure costs for wastewater publicly owned treatment works, stormwater treatment, nonpoint source control, and decentralized wastewater treatment.
+The U.S. Environmental Protection Agency (EPA) has prepared the 2022 CWNS Report to Congress in compliance with CWA section 516(b)(1)(B) (33 U.S Code §1375) as well as CWA section 609, which was added by the Infrastructure Investment and Jobs Act (IIJA), P.L. 117-58, November 15, 2021. This Report summarizes the results of EPA’s 17th survey since the CWA was enacted in 1972."
 
-Endpoints, which are generally wastewater treatment plants, are the point of convergence for all wastewater collected within a 'sewershed'. Our goal is to estimate the spatial area that contributes to these endpoints. Endpoint locations are obtained from the [Clean Watersheds Needs Survey (CWNS)](https://www.epa.gov/cwns) (2022).
+As part of this survey, utilities submit information related to their treatment plants. Some treatment plants may discharge a portion of their wastewater downstream to other treatment plants. When a treatment plant discharges less than 50% of its wastewater to another facility, we refer to it as an 'endpoint', meaning that it is considered the final destination for wastewater prior to treatment and then discharge back into the environment, most frequently via direct discharge into a water body such as a river or ocean. The entire sewered area that contributes wastewater to a specific endpoint is referred to as a 'sewershed'. A sewershed may therfore refer to a system that is smaller than a single utility or conversely be made up of multiple utilities. The relationship between utilities and endpoints can be derived from CWNS reporting by accounting for reported discharge of wastewater between facilities.
 
-### Defining the Universe of Endpoints
+Sewershed extents are not a part of reporting within the CWNS and are otherwise not statutorily required under the CWA. Understanding the sewered area related to an endpoint however, is critical to support the CWA, as well as multiple other agency and administration priorities. Sewershed boundaries can, for example, facilitate wastewater surveillance efforts and link disease tracking to affected populations. The ability to map sewer systems can also be critical to infrastructure and urban planning, providing information on areas that can be developed or could benefit from resources to aid in economic development.
 
-**Notes:** 
+EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^
 
-- **NOT** safe to assume all rows in facilities_confirmed are all end point 
+## Introduction
 
-- **YES** safe to assume all rows in population_confirmed are endpoints 
+Prior modeling similar to sewershed was conducted by EPA in 2024 for the service areas of community water systems. While there are many similarities between public water and wastewater infrastructure, there are several key differences. For example, there are more than twice as many community water systems in the United States as there are publicly owned treatment works (POTWs). In general, sewer systems represent a larger investment in infrastructure than public water service. Water, for example, is pressurized throughout the system and can more easily overcome changes in topography, whereas sewer largely relies on gravity for wastewater flow. Where gravity must be overcome within wastewater systems, pumping or elevator stations must be installed. Sewer lines are also larger than water supply lines and come with increased construction costs. It is not uncommon for a suburban or rural home to have a public water connection for supply and a septic system for discharge of wastewater. However, having access to a sewer and no access to public water occurs far more infrequently. This suggests that sewer systems are more frequently located in more urbanized areas.
 
-- **REMOVE CHANGE_TYPE == "New"** 
+The previous model for community water systems utilized census blocks, supplemented with land parcels as the basic building block for service areas. We have changed the spatial unit for this model to [H3 hexagons](https://h3geo.org/). H3 hexagons are a global grid system that have several key advantages over census boundaries. For example, because hexagons are roughly the same size anywhere on the planet, many statistical computations related to area and distance can be streamlined, which allows for the development of predictor variables that can incorporate more complexity into machine learning models. The level of resolution we chose for the sewershed model was level 9, which is roughly 0.11 km^2^. Incoporating additional complexity into our predictive data, we also advanced the model from a random forest (used for community water systems) to a boosted tree method, which allows for more confidence in the model predictions and the ability to better determine relationships among predictor data that may have otherwise been obscured.
 
-- Total receiving population = total number of people the facility is receiving from, regardless of whether its sent on elsewhere  
+This document provides detailed descriptions of the full modeling process from development to the creation of the final dataset and is broken up into the following parts:
 
-Not all records within the CWNS represent endpoints for wastewater collection. The first step in our modeling effort is to establish the universe of systems. To do this, we use the following criteria to select locations:
+- **Overview of Existing Data**
+  - Details the sewershed data that was obtained from public sources.
+- **Selection of Validation Data**
+  - Describes how existing data was reviewed and selected (or not selected) for inclusion in model development.
+- **Feature Engineering**
+  - Feature engineering refers to the methods used in obtaining and developing data that is relevant for accurately predicting whether an areas is served by a particular endpoint.
+- **Model Development**
+  - How the model was tuned, trained and validated to ensure the best possible predictions.
+- **Constructing Sewersheds**
+  - The output of the model is made up of millions of probabilities that must be evaluated and used to construct sewersheds from hexagons.
+- **Results**
+  - Detailed analysis of model performance and validation against existing sewershed data.
+- **Discussion**
+  - Implications of model results, discussion of modeling successes and limitations.
 
-- Publicly owned treatment works  
+## Definitions
+
+# Insert latex table of definitions with two columns
+| Term | Definition |
+|------|------------|
+| CWNS | Clean Watershed Needs Survey |
+| Endpoint | The point of convergence for all wastewater collected within a 'sewershed' |
+| Sewershed | The area that contributes wastewater to a specific endpoint |
+| Utility | A public or private entity that provides wastewater treatment services |
+| POTW | Publicly Owned Treatment Works |
+
+## CWNS Universe
+
+Not all records within the CWNS represent endpoints for wastewater collection. The first step in our modeling effort is to establish the universe of systems. To do this, we use the following criteria to select endpoints:
 
 - POTWs that treat human waste (as opposed to wet weather facilities)  
-
 - Total receiving population > 0  
-
 - facility type contains “treatment plant”
 - Residential population > 0
-- Percent of Discharge is set to be < 50% (This value can be changed)
+- Percent of Discharge is < 50%
+
+The data compiled from the CWNS was reviewed for accuracy by EPA[^1].
+
+[^1]: After review, it was determined that it is **NOT** safe to assume all rows in 'FACILITIES_CONFIRMED.txt' are all end points. It is safe to assume all rows in 'POPULATION_WASTEWATER_CONFIRMED.txt.' are endpoints. rows identified as having 'CHANGE_TYPE' = 'New' should be removed.
+
 
 The CWNS data we are working with was received as a Microsoft Access Database, which is located in 'Data/CWNS 2022 Database_April2024.accdb'. We use 7 tables from this access database. Note that 'POPULATION_WASTEWATER_CONFIRMED' was manually updated by ERG in June, 2024 and does not reflect original data in the access database. Each table was exported from Access to a comma delimited file. The seven files used are:
 
@@ -75,6 +105,8 @@ We create a flat file where each row represents a facility and perform the follo
 - Data tables are combined and the filter is applied: 
 
   - `TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant" & PRESENT_DISCHARGE_PERCENTAGE < 50`
+  
+Total receiving population = total number of people the facility is receiving from, regardless of whether its sent on elsewhere  
 
 In total, we started with 54,738 rows of data, which were queried down to a universe of 17,272 individual treatment plants to be included in the modeling efforts.
 
@@ -153,6 +185,62 @@ sf <- treatment.end%>%
 
 st_write(sf, here("Data/endpoints.gpkg"), layer = "Endpoints_LT50PCT_Q", append = FALSE)
 ```
+
+## Existing Sewershed Data
+
+The goal of this project was to publish a comprehensive dataset of sewershed boundaries in the United States that can be linked to the CWNS. To that end, we sought to include as many publicly available sewershed areas as possible. Ideally, every boundary would be sourced from the utility level to represent the most accurate representation of sewersheds possible. However, this data does not always exist, which necessitates the creation of modeling approaches to fill in the gaps.
+
+EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 2,708 sewersheds from public sources which could be linked to the CWNS (@fig-stateSwr).
+
+```{r stateSewersheds}
+#| label: fig-stateSwr
+#| fig-cap: "The total number of publicly available sewershed areas obtained by EPA for inclusion in the final dataset and for consideration in model training and testing."
+#| fig-align: "center"
+#| fig-alt: "A bar plot illustrating the count of sewersheds obtained from public sources. New York has the most with 600 of the total 2,708."
+#| fig-width: 6
+#| fig-height: 4
+#| fig-show: "hold"
+
+# state.swr <- st_read(here("Data/Final_CWNS_Utilities.gpkg"),
+#                      layer = "State_Swr_04152025", quiet = TRUE)
+
+# Load State Names
+fips <- vroom(here("Data/fips_join.csv"), col_types = c("state_code"="c"))
+
+state.swr.df <- vroom(here("Data/Final_CWNS_Utilities_04152025.csv"), show_col_types = FALSE)
+
+state.table <- as.data.frame(table(substr(state.swr.df$CWNS_ID,1,2)))%>%
+  left_join(fips, by = c("Var1"="state_code"))%>%
+  mutate(state_name = fct_reorder(state_name,.x = state_name, .fun = sort))
+
+ggplot(state.table)+
+  geom_bar(aes(x = Freq, y = fct_rev(state_name)), stat = "identity", fill = "#4d8055")+
+  labs(title = "Count of Publicly Available Sewersheds by State", x = "# of Systems", y = "")
+
+```
+
+
+## Methods
+
+### Feature Engineering
+
+### Model Development
+
+### Constructing Sewersheds from Model Results
+
+### Cleaning Outputs
+
+## Results
+
+## Discussion
+
+## Endpoints
+
+Endpoints, which are generally wastewater treatment plants, are the point of convergence for all wastewater collected within a 'sewershed'. Our goal is to estimate the spatial area that contributes to these endpoints. Endpoint locations are obtained from the [Clean Watersheds Needs Survey (CWNS)](https://www.epa.gov/cwns) (2022).
+
+### Defining the Universe of Endpoints
+
+
 
 
 ## Validation Data (Public Sewershed Data)
@@ -582,7 +670,8 @@ As a starting point, we need to compare the number of system boundaries we have 
 
 ```{r}
 intrsct.df <- vroom(here("Data/Validation/CWNS_Intersection.csv"))
-ep <- st_read(here("Data/Validation/Validation.gpkg"),layer = "endpoints")
+ep <- st_read(here("Data/endpoints_04042025.shp"))%>%
+  filter(STATE_CODE %in% intrsct.df$STATE_CODE)
 
 # Count of endpoints by state
 state.ep <- ep%>%
@@ -900,7 +989,7 @@ st_write(cnty.ep.intrsct,here("Data/Validation/Validation.gpkg"), layer = "Count
 
 #### Count of CWNS Systems by County
 
-```{r}
+```{r cntycmpr, eval = FALSE}
 cnty.compare <- st_read(here("Data/Validation/Validation.gpkg"), layer = "County_Compare")
 cnty.ep.intrsct <- st_read(here("Data/Validation/Validation.gpkg"), layer = "County_EP_Intersect")
 ggplot(cnty.compare)+
@@ -913,21 +1002,21 @@ ggplot(cnty.compare)+
 
 #### Percent of Systems Matched by County
 
-```{r}
+```{r ccp, eval = FALSE}
 ggplot(cnty.compare)+
   geom_sf(aes(fill = Pct_Matched))+
   scale_fill_viridis_c()+
   labs(fill = "% Matched Systems")
 ```
 
-```{r}
+```{r ccp2, eval = FALSE}
 ggplot(cnty.compare)+
   geom_histogram(aes(x = Pct_Matched), color = "black", fill = "#5e88cc",binwidth = 1)+
   labs(title = "Percent Matched by County", x = "% Matched", y = "# of Systems")
 ```
 
 #### Match Scores in 100% Complete Counties
-```{r}
+```{r, eval = FALSE}
 # Subset counties that are 100% Complete
 complete.counties <- cnty.compare%>%
   filter(Pct_Matched == 100)%>%
@@ -945,7 +1034,7 @@ ggplot(ep.cmplt)+
 
 ```
 
-```{r}
+```{r, eval = FALSE}
 #calculate mean match score by county in 100% complete counties
 pctScore.county <- ep.cmplt%>%
   st_drop_geometry()%>%
@@ -1351,7 +1440,7 @@ leaflet()%>%
 
 ## Feature Engineering
 
-```{r loadTraining}
+```{r loadTraining, eval = FALSE}
 tt.df <- vroom(here("Documentation/Data/Training_Testing.csv"))
 ```
 
@@ -1373,7 +1462,7 @@ As previously discussed, we have identified 32 miles as the cutoff beyond which 
 When splitting the data, we make sure the proportion of 'TRUE' and 'FALSE' values are similar. The plot below shows the distributions between sets are indeed similar, which is a good first indicator. However, we see a clear imbalance between the two classes (TRUE & FALSE). We expect this since we know that we have multiple rows for many hexagons and with a radius of 32 miles, most hexagons will not be served by the endpoint they are compared with. This problem is referred to as the 'Class Imbalance Problem'. The issue is that our goal is to map sewersheds, and the nature of the random forest model is to minimize total error, regardless of the class. This means that the model will be biased towards predicting 'FALSE' for most hexagons, which is not what we want. To address this, we will under-sample the 'FALSE' class to balance the outcomes with 'TRUE'. Again, it is critical that we do so in a representative way. 
 
 
-```{r trainTestPlot}
+```{r trainTestPlot, eval = FALSE}
 ggplot(tt.df)+
   geom_bar(aes(x = Correct_CWNS, stat = "count"))+
   facet_wrap(~Set)+
@@ -1385,7 +1474,7 @@ ggplot(tt.df)+
 ### Balancing Training Outcomes
 Our primary concern is the fitting of the model to the training set. We don't need to under sample the testing set because we are not using it to fit the model. An alternative use of the excess testing data is to bin the FALSE  classes into separate testing sets to evaluate effects. The table below shows the number of 'TRUE' values to be ~20,000 in the training and testing sets, which is the value we will use to sample the 'FALSE' class within the training set. We have to be particularly careful here because if our sample includes to many hexagons that are are a greater distance from the endpoint, we may throw off the similarities of the data values. Conversely, we must not exclude farther hexagons excessively or we will not be able to effectively model larger or more disperse systems.
 
-```{r classCount}
+```{r classCount, eval = FALSE}
 # Count number of TRUE and FALSE values between sets
 tt.df.count <- tt.df%>%
   group_by(Set,Correct_CWNS)%>%
@@ -1512,12 +1601,7 @@ cat("::: {layout-ncol=2}\n",
 Variable Label: 'TOTAL_RES_POPULATION_2022'
 
 
-#### 
-```{r popServedEngineering}
-
-```
-
-         
+     
 ### Manhatten Distance
 Variable Label: 'distance'
 
@@ -1585,7 +1669,7 @@ Variable Labels: 'Pop_9', 'THU_9', 'Urban_Pop_9', 'OHU_90_9', 'Pub_W_90_9', 'Pub
 
 To determine the best model parameters, a grid search approach is used. This involves generating random parameter values within a range and using permutations of those combinations to train hundreds of models. We then evaluate the performance of the models to determine the best parameter combinations and start to identify variables of importance. The approach we used randomizes the number of trees between 10 and 1,010 (using intervals of 100) and mTry between 2 and 10. Each model includes the same base predictors, but also includes three additional predictors selected at random. Base predictors in every model include: 'TOTAL_RES_POPULATION_2022' 'Near_Rank', 'distance' 'nBldgs' 'HU_90' 'HU_20' 'Pct_Sewer_90' 'Urban_Rural' 'NLCD_Class' 'EP_Elevation' 'EP_Elev_Dif' and 'Imprv_Med'.
 
-```{r tuningResults}
+```{r tuningResults, eval = FALSE}
 tune.files <- list.files(here("Data/Tuning"), full.names = TRUE)
 tune.df <- vroom(tune.files)%>%
   distinct()
@@ -1613,7 +1697,7 @@ plot_ly(tune.df, x = ~mTry, y = ~Trees, z = ~TPR, color = ~Accuracy, colors = c(
 
 ### Accuracy Related to Additional Variables
 
-```{r}
+```{r tune4, eval = FALSE}
 # Create data frame of all variables that were added
 var.impact <- tune.df%>%
   separate(Added, into = c("Add_1","Add_2","Add_3"), sep = ", ")
