@@ -1,0 +1,10 @@
+[1] "Loading Data ...2025-04-25 16:27:28"
+[1] "Computing neighborhhod with radius: 3 ...2025-04-25 16:28:34"
+            used  (Mb) gc trigger    (Mb)   max used    (Mb)
+Ncells   8024673 428.6  114202000  6099.1  142752500  7623.9
+Vcells 116993281 892.6 1787465652 13637.3 1587580840 12112.3
+[1] "Computing neighborhhod with radius: 9 ...2025-04-25 16:31:21"
+            used   (Mb) gc trigger    (Mb)    max used    (Mb)
+Ncells   8025064  428.6  520464745 27795.9   624810821 33368.5
+Vcells 362969100 2769.3 9344041474 71289.4 11680051837 89111.8
+[1] "SCRIPT COMPLETE! ...2025-04-25 16:42:12"

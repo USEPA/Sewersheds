@@ -1,0 +1,21 @@
+[1] "Script Start @ 2025-06-18 09:56:50"
+[1] "42 previously delineated systems for state: 53"
+[1] "Assigning hexagons to 221 systems @ 2025-06-18 09:57:11"
+[1] "9% Complete @ 2025-06-18 09:57:14"
+[1] "18.1% Complete @ 2025-06-18 09:57:17"
+[1] "27.1% Complete @ 2025-06-18 09:57:19"
+[1] "36.2% Complete @ 2025-06-18 09:57:22"
+[1] "45.2% Complete @ 2025-06-18 09:57:25"
+[1] "54.3% Complete @ 2025-06-18 09:57:28"
+[1] "63.3% Complete @ 2025-06-18 09:57:31"
+[1] "72.4% Complete @ 2025-06-18 09:57:34"
+[1] "81.4% Complete @ 2025-06-18 09:57:36"
+[1] "90.5% Complete @ 2025-06-18 09:57:39"
+[1] "99.5% Complete @ 2025-06-18 09:57:43"
+[1] "Failed to find boundaries for 0 Systems"
+[1] "Saving outputs @ 2025-06-18 09:57:43"
+Deleting layer `sewersheds' using driver `GPKG'
+Writing layer `sewersheds' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Max_Prob/Boundaries/FP_53.gpkg' using driver `GPKG'
+Writing 221 features with 6 fields and geometry type Unknown (any).
+[1] "Script Complete @ 2025-06-18 09:57:46"

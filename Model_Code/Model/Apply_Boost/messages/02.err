@@ -1,0 +1,40 @@
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) netcdf/4.9.2     2) udunits/2.2.28
+
+The following have been reloaded with a version change:
+  1) R/4.3.0 => R/4.4.2             4) hdf5/1.10.8 => hdf5/1.14.5
+  2) gdal/3.6.4 => gdal/3.7.3       5) intel/21.4 => intel/24.2
+  3) geos/3.11.2 => geos/3.12.0     6) proj/9.2.0 => proj/9.3.0
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘xgboost’
+
+The following object is masked from ‘package:dplyr’:
+
+    slice
+
+Loading required package: ggplot2
+Loading required package: lattice
+Loading required package: ParamHelpers
+
+Attaching package: ‘mlr’
+
+The following object is masked from ‘package:caret’:
+
+    train
+
+Linking to GEOS 3.12.0, GDAL 3.7.3, PROJ 9.3.0; sf_use_s2() is TRUE
+Warning in predict.WrappedModel(xgmodel, newdata = df.order) :
+  Provided data for prediction is not a pure data.frame but from class spec_tbl_df, hence it will be converted.

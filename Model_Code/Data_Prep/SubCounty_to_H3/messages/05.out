@@ -1,0 +1,22 @@
+[1] "Loading Sub Counties @ 2025-02-24 12:11:59"
+Reading layer `cb_2021_us_cousub_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 36501 features and 14 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Finding Hexagons for 1209 Sub Counties @ 2025-02-24 12:12:02"
+[1] "8.3% Complete @ 2025-02-24 12:12:07"
+[1] "16.5% Complete @ 2025-02-24 12:12:14"
+[1] "24.8% Complete @ 2025-02-24 12:12:20"
+[1] "33.1% Complete @ 2025-02-24 12:12:30"
+[1] "41.4% Complete @ 2025-02-24 12:12:40"
+[1] "49.6% Complete @ 2025-02-24 12:12:51"
+[1] "57.9% Complete @ 2025-02-24 12:13:03"
+[1] "66.2% Complete @ 2025-02-24 12:13:18"
+[1] "74.4% Complete @ 2025-02-24 12:13:33"
+[1] "82.7% Complete @ 2025-02-24 12:13:49"
+[1] "91% Complete @ 2025-02-24 12:14:07"
+[1] "99.3% Complete @ 2025-02-24 12:14:26"
+[1] "SCRIPT COMPLETE @ 2025-02-24 12:14:28"

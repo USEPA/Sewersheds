@@ -1,0 +1,24 @@
+Reading layer `US_county_2022' from data source 
+  `/work/GRDVULN/sewershed/Data/US_county_2022.shp' using driver `ESRI Shapefile'
+Simple feature collection with 3222 features and 21 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -7115208 ymin: -1685018 xmax: 3321632 ymax: 4591848
+Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+[1] "Extracting Highways for 15 Counties @ 2025-04-28 10:18:41"
+[1] "Completed 1 Rows @ 2025-04-28 10:22:11"
+[1] "Completed 2 Rows @ 2025-04-28 10:24:22"
+[1] "Completed 3 Rows @ 2025-04-28 10:37:14"
+[1] "Completed 4 Rows @ 2025-04-28 10:44:50"
+[1] "Completed 5 Rows @ 2025-04-28 10:45:55"
+[1] "Completed 6 Rows @ 2025-04-28 10:46:08"
+[1] "Completed 7 Rows @ 2025-04-28 10:46:58"
+[1] "Completed 8 Rows @ 2025-04-28 11:43:14"
+[1] "Completed 9 Rows @ 2025-04-28 11:51:00"
+[1] "Completed 10 Rows @ 2025-04-28 11:54:43"
+[1] "Completed 11 Rows @ 2025-04-28 12:05:57"
+[1] "Completed 12 Rows @ 2025-04-28 12:18:03"
+[1] "Completed 13 Rows @ 2025-04-28 12:18:23"
+[1] "Completed 14 Rows @ 2025-04-28 12:25:02"
+[1] "Completed 15 Rows @ 2025-04-28 12:27:42"
+[1] "Script Complete @ 2025-04-28 12:27:43"

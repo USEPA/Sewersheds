@@ -1,0 +1,8 @@
+Reading layer `Boundaries_05052025' from data source 
+  `/work/GRDVULN/sewershed/Data/Final_Utility_Boundaries.gpkg' 
+  using driver `GPKG'
+Simple feature collection with 3191 features and 4 fields (with 5 geometries empty)
+Geometry type: GEOMETRY
+Dimension:     XY
+Bounding box:  xmin: -123.5291 ymin: 25.41211 xmax: -69.95041 ymax: 48.965
+Geodetic CRS:  WGS 84

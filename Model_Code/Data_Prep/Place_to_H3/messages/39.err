@@ -1,0 +1,30 @@
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) netcdf/4.9.2     2) udunits/2.2.28
+
+The following have been reloaded with a version change:
+  1) R/4.3.0 => R/4.4.2             4) hdf5/1.10.8 => hdf5/1.14.5
+  2) gdal/3.6.4 => gdal/3.7.3       5) intel/21.4 => intel/24.2
+  3) geos/3.11.2 => geos/3.12.0     6) proj/9.2.0 => proj/9.3.0
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Linking to GEOS 3.12.0, GDAL 3.7.3, PROJ 9.3.0; sf_use_s2() is TRUE
+Warning message:
+In CPL_read_ogr(dsn, layer, query, as.character(options), quiet,  :
+  GDAL Message 1: organizePolygons() received a polygon with more than 100 parts. The processing may be really slow.  You can skip the processing by setting METHOD=SKIP, or only make it analyze counter-clock wise parts by setting METHOD=ONLY_CCW if you can assume that the outline of holes is counter-clock wise defined
+Error in data.frame(h3_index = h3.centers$h3_index, Place = place$Place) : 
+  arguments imply differing number of rows: 0, 1
+In addition: Warning message:
+Using one column matrices in `filter()` was deprecated in dplyr 1.1.0.
+ℹ Please use one dimensional logical vectors instead. 
+Execution halted

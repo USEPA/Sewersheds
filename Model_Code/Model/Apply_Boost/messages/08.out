@@ -1,0 +1,12 @@
+[1] "Starting 08 @ 2025-06-05 22:35:07"
+[1] "Formatting Data 08 @ 2025-06-05 22:35:12"
+[1] "Checking for and repairing missing data 08 @ 2025-06-05 22:35:22"
+[1] "Running Model 08 @ 2025-06-05 22:35:22"
+[1] "Saving output table 08 @ 2025-06-05 22:35:48"
+[1] "Retrieving Hexagons 08 @ 2025-06-05 22:36:06"
+[1] "Building sewersheds 08 @ 2025-06-05 22:36:12"
+Deleting layer `FP_08' using driver `GPKG'
+Writing layer `FP_08' to data source 
+  `/work/GRDVULN/sewershed/Model/Apply_Boost/outputs/Sewersheds.gpkg' using driver `GPKG'
+Writing 392 features with 4 fields and geometry type Multi Polygon.
+[1] "SCRIPT COMPLETE 08 @ 2025-06-05 22:36:32"

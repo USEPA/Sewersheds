@@ -1,0 +1,58 @@
+[1] "Starting Hawaii"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 22 systems"
+[1] "Hawaii is 4.5% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:53"
+[1] "Hawaii is 9.1% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:53"
+[1] "Hawaii is 13.6% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 18.2% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 22.7% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 27.3% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 31.8% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 36.4% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:54"
+[1] "Hawaii is 40.9% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:58"
+[1] "Hawaii is 45.5% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:58"
+[1] "Hawaii is 50% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:59"
+[1] "Hawaii is 54.5% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:59"
+[1] "Hawaii is 59.1% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:59"
+[1] "Hawaii is 63.6% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:59"
+[1] "Hawaii is 68.2% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:36:59"
+[1] "Hawaii is 72.7% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:00"
+[1] "Hawaii is 77.3% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:00"
+[1] "Hawaii is 81.8% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:01"
+[1] "Hawaii is 86.4% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:09"
+[1] "Hawaii is 90.9% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:10"
+[1] "Hawaii is 95.5% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:11"
+[1] "Hawaii is 100% complete."
+[1] "Completed Hawaii @ 2025-05-14 10:37:11"
+Deleting layer `Pop' using driver `GPKG'
+Writing layer `Pop' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Pop_Delineated/FP_15.gpkg' using driver `GPKG'
+Writing 22 features with 10 fields and geometry type Unknown (any).
+[1] "SCRIPT COMPLETE @ 2025-05-14 10:37:13"

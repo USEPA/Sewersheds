@@ -1,0 +1,25 @@
+[1] "Starting New Jersey"
+[1] "Ignoring hexagons already assigned to 150 Systems"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 9 systems"
+[1] "New Jersey is 11.1% complete."
+[1] "New Jersey is 22.2% complete."
+[1] "New Jersey is 33.3% complete."
+[1] "New Jersey is 44.4% complete."
+[1] "New Jersey is 55.6% complete."
+[1] "New Jersey is 66.7% complete."
+[1] "New Jersey is 77.8% complete."
+[1] "New Jersey is 88.9% complete."
+[1] "New Jersey is 100% complete."
+[1] "Completed New Jersey @ 2025-05-27 09:51:13"
+Deleting layer `weighted' using driver `GPKG'
+Writing layer `weighted' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Weighted/FP_34.gpkg' using driver `GPKG'
+Writing 9 features with 10 fields and geometry type Multi Polygon.
+[1] "SCRIPT COMPLETE @ 2025-05-27 09:51:14"

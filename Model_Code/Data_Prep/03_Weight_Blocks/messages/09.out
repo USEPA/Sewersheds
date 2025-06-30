@@ -1,0 +1,41 @@
+[1] "Starting 09"
+[1] "Loading quadkey joins @ 2025-04-25 12:52:07"
+[1] "Loading download links @ 2025-04-25 12:52:18"
+Reading layer `CT_block_2020' from data source 
+  `/work/GRDVULN/census/CT_block_2020.shp' using driver `ESRI Shapefile'
+Simple feature collection with 49632 features and 18 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 1833460 ymin: 608749.5 xmax: 1986019 ymax: 758772.9
+Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+[1] "Downloading Buildings from 9 Quadkeys --- 2025-04-25 12:52:37"
+[1] "(9) Files to be Downloaded"
+[1] "Loading Buildings @ 2025-04-25 12:52:38"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:52:41"
+[1] "Completed Quadkey #1 @ 2025-04-25 12:52:42"
+[1] "Loading Buildings @ 2025-04-25 12:52:49"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:05"
+[1] "Completed Quadkey #2 @ 2025-04-25 12:53:10"
+[1] "Loading Buildings @ 2025-04-25 12:53:15"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:53"
+[1] "Completed Quadkey #3 @ 2025-04-25 12:53:54"
+[1] "Loading Buildings @ 2025-04-25 12:53:56"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:54:08"
+[1] "Completed Quadkey #4 @ 2025-04-25 12:54:12"
+[1] "Loading Buildings @ 2025-04-25 12:54:15"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:54:32"
+[1] "Completed Quadkey #5 @ 2025-04-25 12:54:41"
+[1] "Loading Buildings @ 2025-04-25 12:54:42"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:54:47"
+[1] "Completed Quadkey #6 @ 2025-04-25 12:54:50"
+[1] "Loading Buildings @ 2025-04-25 12:54:53"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:54:57"
+[1] "Completed Quadkey #7 @ 2025-04-25 12:55:00"
+[1] "Loading Buildings @ 2025-04-25 12:55:03"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:55:06"
+[1] "Completed Quadkey #8 @ 2025-04-25 12:55:06"
+[1] "Loading Buildings @ 2025-04-25 12:55:09"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:55:16"
+[1] "Completed Quadkey #9 @ 2025-04-25 12:55:17"
+[1] "Calculating Weights @ 2025-04-25 12:55:17"
+[1] "SCRIPT COMPLETE @ 2025-04-25 12:55:20"

@@ -1,14 +1,18 @@
 ---
-title: "Documentation"
+title: "U.S. EPA National Sewershed Dataset & Model Documentation"
 format:
   html:
     toc: true
     toc-location: left
-    toc-depth: 2
+    toc-depth: 3
     toc-expand: true
     code-fold: true
     code-summary: 'Show Code'
     page-layout: full
+  pdf:
+    toc: true
+    toc-depth: 3
+    number-sections: true
 ---
 
 ```{r setup, include = FALSE}
@@ -19,11 +23,16 @@ library(here)
 library(leaflet)
 library(h3)
 library(gt)
+library(gtExtras)
 library(plotly)
 
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+utility.df <- vroom("D:/Github/Sewersheds/Data/Utilities_06232025.csv")%>%
+  drop_na(FACILITY_NAME)
 ```
 
+This document serves as background material for the EPA National Sewershed Dataset. The dataset can be accessed via the [EPA internal web application](https://epa.maps.arcgis.com/apps/instant/atlas/index.html?appid=5b098638234349dd8dca7f764e7aa4e3)
 
 
 ## Executive Summary
@@ -43,26 +52,9 @@ Prior modeling similar to sewershed was conducted by EPA in 2024 for the service
 
 The previous model for community water systems utilized census blocks, supplemented with land parcels as the basic building block for service areas. We have changed the spatial unit for this model to [H3 hexagons](https://h3geo.org/). H3 hexagons are a global grid system that have several key advantages over census boundaries. For example, because hexagons are roughly the same size anywhere on the planet, many statistical computations related to area and distance can be streamlined, which allows for the development of predictor variables that can incorporate more complexity into machine learning models. The level of resolution we chose for the sewershed model was level 9, which is roughly 0.11 km^2^. Incoporating additional complexity into our predictive data, we also advanced the model from a random forest (used for community water systems) to a boosted tree method, which allows for more confidence in the model predictions and the ability to better determine relationships among predictor data that may have otherwise been obscured.
 
-This document provides detailed descriptions of the full modeling process from development to the creation of the final dataset and is broken up into the following parts:
-
-- **Overview of Existing Data**
-  - Details the sewershed data that was obtained from public sources.
-- **Selection of Validation Data**
-  - Describes how existing data was reviewed and selected (or not selected) for inclusion in model development.
-- **Feature Engineering**
-  - Feature engineering refers to the methods used in obtaining and developing data that is relevant for accurately predicting whether an areas is served by a particular endpoint.
-- **Model Development**
-  - How the model was tuned, trained and validated to ensure the best possible predictions.
-- **Constructing Sewersheds**
-  - The output of the model is made up of millions of probabilities that must be evaluated and used to construct sewersheds from hexagons.
-- **Results**
-  - Detailed analysis of model performance and validation against existing sewershed data.
-- **Discussion**
-  - Implications of model results, discussion of modeling successes and limitations.
+This document provides detail on how public data was collected, how the model was developed and discusses the resulting national dataset of sewersheds and how it can be used to support EPA's mission.
 
 ## Definitions
-
-# Insert latex table of definitions with two columns
 | Term | Definition |
 |------|------------|
 | CWNS | Clean Watershed Needs Survey |
@@ -71,7 +63,72 @@ This document provides detailed descriptions of the full modeling process from d
 | Utility | A public or private entity that provides wastewater treatment services |
 | POTW | Publicly Owned Treatment Works |
 
-## CWNS Universe
+
+
+## Existing Sewershed Data
+
+The goal of this project was to publish a comprehensive dataset of sewershed boundaries in the United States that can be linked to the CWNS. To that end, we sought to include as many publicly available sewershed areas as possible. Ideally, every boundary would be sourced from the utility level to represent the most accurate representation of sewersheds possible. However, this data does not always exist, which necessitates the creation of modeling approaches to fill in the gaps.
+
+EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 3,280 sewersheds from public sources which could be linked to the CWNS (@tbl-stateSwr).
+
+```{r stateSewersheds}
+#| label: tbl-stateSwr
+#| tbl-cap: "The total number of publicly available sewershed areas obtained by EPA for inclusion in the final dataset and for consideration in model training and testing."
+#| tbl-align: "center"
+#| tbl-alt: "A bar plot illustrating the count of sewersheds obtained from public sources. New York has the most with 600 of the total 2,708."
+#| fig-width: 6
+#| fig-height: 4
+#| fig-show: "hold"
+
+ep.df <- vroom(here("Data/CWNS_Endpoints_LT50PCT_Q.csv"))
+
+ep.st.count <- ep.df%>%
+  group_by(STATE_CODE)%>%
+  summarise(nSystems_T = n(),
+            Pop_T = sum(TOTAL_RES_POPULATION_2022,na.rm = TRUE))
+
+utility.st <- utility.df%>%
+  group_by(state_name)%>%
+  summarise(STATE_CODE = STATE_CODE[1],
+            Pop = sum(TOTAL_RES_POPULATION_2022,na.rm = TRUE),
+            nSystems = n())%>%
+  left_join(ep.st.count, by = "STATE_CODE")%>%
+  mutate(Pct = round(100*(nSystems/nSystems_T)),
+         Pop_Pct = round(100*(Pop/Pop_T)))%>%
+  select(state_name,Pop,nSystems,Pct,Pop_Pct)
+
+#ut.st.tbl <- 
+utility.st %>%
+  gt() %>%
+  fmt_number(columns = c(Pop,nSystems),use_seps = TRUE,
+             decimals = 0)%>%
+  cols_label(state_name = "State",
+             Pop = "Sewered Population of Utility Sourced Sewersheds",
+             nSystems = "Count of Utility Sourced Sewersheds",
+             Pct = "% of State Sewersheds",
+             Pop_Pct = "% of Sewered Population Served by Utility Sourced Sewersheds")%>%
+  gt_plt_bar_pct(column = Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE)%>%
+  gt_plt_bar_pct(column = Pop_Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE)%>%
+  cols_width(state_name ~ px(100),
+              Pop ~ px(100),
+              nSystems ~ px(100),
+             Pct ~ px(200),
+             Pop_Pct ~ px(200))%>%
+  cols_align(
+    align = "center",
+    columns = c(Pop,nSystems)
+  )
+
+# gtsave(ut.st.tbl, filename = "Utility_Sourced_Sewersheds_by_State.png",
+#        path = "D:/Github/Sewersheds/Documentation/img")
+```
+
+
+## Methods
+
+Three types of tree-based models were considered for this project: a decision tree, a random forest and boosted trees. All three have advantages and disadvantages that must be considered. A single decision tree is the simplest and most easy to interpret method, but can be overly simplistic and less accurate than more complex models. A random forest is a collection of decision trees with randomized input variables, which can improve accuracy and protect from over-fitting but is less interpretable and requires more computational power. Boosted trees are a more advanced method that build decisions trees in succession. Each new decision tree attempts to solve for error found in the previous tree. This can lead to even better accuracy, but at the cost of increased complexity and reduced interpretability. Boosted trees are especially effective at leveraging variables that may otherwise reflect lower importance levels in other methods. We found that the higher accuracy returned by boosted tree models justified its selection over the other two methods. For brevity, only the boosted tree model is discussed in detail.
+
+### Defining the Universe of Sewersheds
 
 Not all records within the CWNS represent endpoints for wastewater collection. The first step in our modeling effort is to establish the universe of systems. To do this, we use the following criteria to select endpoints:
 
@@ -108,11 +165,12 @@ We create a flat file where each row represents a facility and perform the follo
   
 Total receiving population = total number of people the facility is receiving from, regardless of whether its sent on elsewhere  
 
-In total, we started with 54,738 rows of data, which were queried down to a universe of 17,272 individual treatment plants to be included in the modeling efforts.
+
+
 
 ```{r loadData, eval=FALSE}
 # Import CWNS data and create a flat file
-
+ 
 ## Load facilities
 fac <- vroom(here("Data/FACILITIES.txt"), show_col_types = FALSE)%>%
   select(CWNS_ID,FACILITY_ID,STATE_CODE,INFRASTRUCTURE_TYPE,FACILITY_NAME)
@@ -136,7 +194,8 @@ fac.locs <- vroom(here("data/PHYSICAL_LOCATION.txt"), show_col_types = FALSE)%>%
 df.1 <- fac%>%
   left_join(pop, by = c("CWNS_ID","FACILITY_ID"))%>%
   left_join(fac.locs, by = c("CWNS_ID","FACILITY_ID"))%>%
-  left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))
+  left_join(fac.types, by = c("CWNS_ID","FACILITY_ID"))%>%
+  mutate(END_FACILITY = ifelse(is.na(END_FACILITY),"N",END_FACILITY))
 
 # Data captured after CWNS
 fac.cf <- vroom(here("data/FACILITIES_CONFIRMED.txt"), show_col_types = FALSE)%>%
@@ -164,6 +223,7 @@ df.bind <- bind_rows(df.1,df.2)%>%
 
 discharge <- vroom(here("Data/DISCHARGES.csv"), col_names = c("CWNS_ID","FACILITY_ID","STATE_CODE","DISCHARGE_TYPE","PRESENT_DISCHARGE_PERCENTAGE","PROJECTED_DISCHARGE_PERCENT","DISCHARGES_TO_CWNSID","DISCHARGES_NOTES"))%>%
   select(CWNS_ID,DISCHARGE_TYPE,PRESENT_DISCHARGE_PERCENTAGE)%>%
+  filter(DISCHARGE_TYPE == "Discharge To Another Facility")%>%
   group_by(CWNS_ID)%>%
   mutate(PRESENT_DISCHARGE_PERCENTAGE = sum(PRESENT_DISCHARGE_PERCENTAGE,na.rm = TRUE))%>%
   ungroup()%>%
@@ -184,463 +244,11 @@ sf <- treatment.end%>%
   st_as_sf(coords = c("LONGITUDE","LATITUDE"), crs = 4269)
 
 st_write(sf, here("Data/endpoints.gpkg"), layer = "Endpoints_LT50PCT_Q", append = FALSE)
-```
-
-## Existing Sewershed Data
-
-The goal of this project was to publish a comprehensive dataset of sewershed boundaries in the United States that can be linked to the CWNS. To that end, we sought to include as many publicly available sewershed areas as possible. Ideally, every boundary would be sourced from the utility level to represent the most accurate representation of sewersheds possible. However, this data does not always exist, which necessitates the creation of modeling approaches to fill in the gaps.
-
-EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 2,708 sewersheds from public sources which could be linked to the CWNS (@fig-stateSwr).
-
-```{r stateSewersheds}
-#| label: fig-stateSwr
-#| fig-cap: "The total number of publicly available sewershed areas obtained by EPA for inclusion in the final dataset and for consideration in model training and testing."
-#| fig-align: "center"
-#| fig-alt: "A bar plot illustrating the count of sewersheds obtained from public sources. New York has the most with 600 of the total 2,708."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-show: "hold"
-
-# state.swr <- st_read(here("Data/Final_CWNS_Utilities.gpkg"),
-#                      layer = "State_Swr_04152025", quiet = TRUE)
-
-# Load State Names
-fips <- vroom(here("Data/fips_join.csv"), col_types = c("state_code"="c"))
-
-state.swr.df <- vroom(here("Data/Final_CWNS_Utilities_04152025.csv"), show_col_types = FALSE)
-
-state.table <- as.data.frame(table(substr(state.swr.df$CWNS_ID,1,2)))%>%
-  left_join(fips, by = c("Var1"="state_code"))%>%
-  mutate(state_name = fct_reorder(state_name,.x = state_name, .fun = sort))
-
-ggplot(state.table)+
-  geom_bar(aes(x = Freq, y = fct_rev(state_name)), stat = "identity", fill = "#4d8055")+
-  labs(title = "Count of Publicly Available Sewersheds by State", x = "# of Systems", y = "")
 
 ```
 
-
-## Methods
-
-### Feature Engineering
-
-### Model Development
-
-### Constructing Sewersheds from Model Results
-
-### Cleaning Outputs
-
-## Results
-
-## Discussion
-
-## Endpoints
-
-Endpoints, which are generally wastewater treatment plants, are the point of convergence for all wastewater collected within a 'sewershed'. Our goal is to estimate the spatial area that contributes to these endpoints. Endpoint locations are obtained from the [Clean Watersheds Needs Survey (CWNS)](https://www.epa.gov/cwns) (2022).
-
-### Defining the Universe of Endpoints
-
-
-
-
-## Validation Data (Public Sewershed Data)
-
-The model will use boundaries from a variety of sources to train and test on. It is critical that we use accurate data for this, otherwise the model will reflect incorrect relationships. This section details the data we have and defines the areas we will use for model creation. For the model, areas that are not served by sewer systems are equally important. For model training, we want areas that we know are not served by sewer systems, as well as areas where we know the exact extents of specific sewer systems. Before we review whether boundaries are accurate or not, we need to first determine how many systems are missing boundaries from the dataset we have.
-
-### Joining CWNS IDs to sewershed data.
-
-There is no universal identifier to match data from the CWNS with state provided or otherwise obtained sewershed boundaries. Therefore, we need to match the boundaries with the CWNS IDs that are associated with our data. We do this both spatially and with text matching.
-
-First, an overview of the boundary data we have:
-
-```{r stateSewersheds, eval = FALSE}
-swr.files <- data.frame(path = list.files(here("Data/State_Provided_Data"), full.names = TRUE, pattern = ".shp$"),
-                        file = list.files(here("Data/State_Provided_Data"), full.names = FALSE, pattern = ".shp$"))%>%
-  separate(file, into = c("State","B"), sep = "_", extra = "drop")%>%
-  select(!B)%>%
-  mutate(State = ifelse(State == "West","WestVirginia",State))
-
-# Count features and fields
-state.ff <- data.frame()
-for(n in 1:nrow(swr.files)){
-  sf.temp <- st_read(swr.files$path[n], quiet = TRUE)
-  newRow <- data.frame(State = swr.files$State[n],
-                       Features = nrow(sf.temp),
-                       Fields = ncol(sf.temp),
-                       CRS = st_crs(sf.temp)$input)
-  state.ff <- rbind(state.ff,newRow)
-}
-
-state.ff
-```
-
-
-We have a variety of data from several states that we need to check against the CWNS data. We start by extracting each boundary from the data we have and determining the utility name field (if one exists). Some states have multiple polygons/rows that belong to the same system while others have all polygons for a system condensed into a single row / multipolygon. We need to identify any polygons that can be condensed into a single row to the best of our ability. We then have a single spatial dataset where each row refers to a boundary, and the utility names are in a single column. In total, we have 23,419 polygons across 10 states.
-
-#### Connecticut
-
-Connecticut has one name field: "TREATMENTFACILITY- This field represents the sewer service treatment facility (endpoint) that processes the waste for each municipality. For municipalities without sewers, “Not Applicable” is the designated value." [Source](https://ct-deep-gis-open-data-website-ctdeep.hub.arcgis.com/datasets/CTDEEP::connected-sewer-service-areas/about). Connecticut data is in multipolygon format already but has duplicate endpoint facility values. Therefore, we need to condense these multipolygons based on the treatment facility.
-
-#### Maryland
-We don't seem to have very good metadata for Maryland, but we see that they have several classifications for their polygons, including planned areas and areas for other use types. There is also a 'WWTP_SHED' field, which we take to indicate the treatment plant that the polygon flows to. We filter using `DEF_A == 'EXISTING SERVICE AREA'` and then merge rows based on the treatment plant field.
-
-#### New Hampshire
-New Hampshire provided buffered sewer lines, which have a system name column. These polygons are merged based on this name field.
-
-#### New York
-New York has two separate name columns: 'WWTP' and 'Sewershed'. Since the CWNS uses treatment plants, that is the field we use to aggreagate polygons.
-
-#### New Jersey
-New Jersey has several name fields. Some searching around indicates that the 'WMP' field seems to be associated with the treatment facility. This is used to aggregate rows.
-
-#### Rhode Island
-Rhode island data does not have any associated utility information, so may be difficult to have confidence in any matching.
-
-```{r stateCombine, eval = FALSE}
-# Connecticut
-ct <- st_read(here("Data/State_Provided_Data/CONNECTICUT_statedata_publiconline_sewersheds.shp"), quiet = TRUE)%>%
-  st_transform(4269)%>%
-  st_make_valid()%>%
-  group_by(TreatmentF)%>%
-  summarise()%>%
-  mutate(State = "CT",
-         ID = paste0("CT-",rownames(.)))%>%
-  select(State,ID,TreatmentF)%>%
-  setNames(c("State","ID","Name","geometry"))
-  st_make_valid()
-
-# Maryland
-md <- st_read(here("Data/State_Provided_Data/MARYLAND_statedata_sewersheds.shp"))%>%
-  filter(DEF_A == "EXISTING SERVICE AREA")%>%
-  st_transform(4269)%>%
-  st_make_valid()%>%
-  mutate(WWTP_SHED = replace_na(WWTP_SHED,"UNKNOWN"))%>%
-  group_by(WWTP_SHED)%>%
-  summarise()%>%
-  mutate(State = "MD",
-         ID = paste0("MD-",rownames(.)))%>%
-  select(State,ID,WWTP_SHED)%>%
-  setNames(c("State","ID","Name","geometry"))
-  
-
-# New Hampshire
-nh <- st_read("D:/Github/Sewersheds/Data/State_Provided_Data/New Hampshire/Other_Data/Sewer_Lines_Buffer_Archive.shp")%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(SYS_NAME)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "NH",
-         ID = paste0("NH-",rownames(.)))%>%
-  select(State,ID,SYS_NAME)%>%
-  setNames(c("State","ID","Name","geometry"))
-  
-# New York
-ny <- st_read(here("Data/State_Provided_Data/NEW YORK_statedata_publiconline_sewersheds.shp"))%>%
-  st_transform(4269)%>%
-  st_make_valid()%>%
-  group_by(WWTP)%>%
-  summarise()%>%
-  mutate(State = "NY",ID = paste0("NY-",rownames(.)))%>%
-  select(State,ID,WWTP)%>%
-  setNames(c("State","ID","Name","geometry"))
-  
-# New Jersey
-nj <- st_read(here("Data/State_Provided_Data/NEWJERSEY_statedata_publiconline_sewersheds.shp"))%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(WMP)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "NJ",ID = paste0("NJ-",rownames(.)))%>%
-  select(State,ID,WMP)%>%
-  setNames(c("State","ID","Name","geometry"))
-
-# North Carolina
-nc <- st_read(here("Data/State_Provided_Data/NORTHCAROLINA_statedata_publiconline_sewersheds.shp"))%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(sssyname)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "NC",
-         ID = paste0("NC-",rownames(.)))%>%
-  select(State,ID,sssyname)%>%
-  setNames(c("State","ID","Name","geometry"))
-
-# Rhode Island
-ri <- st_read(here("Data/State_Provided_Data/RHODEISLAND_statedata_publiconline_sewersheds.shp"))%>%
-  mutate(State = "RI",ID = paste0("RI-",rownames(.)))%>%
-  select(State,ID)%>%
-  st_transform(4269)%>%
-  st_make_valid()
-
-# Texas
-tx <- st_read(here("Data/State_Provided_Data/TEXAS_CCN_SEWER_TSMS.shp"))%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(UTILITY)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "TX",ID = paste0("TX-",rownames(.)))%>%
-  select(State,ID,UTILITY)%>%
-  setNames(c("State","ID","Name","geometry"))
-
-# Vermont
-vt <- st_read(here("Data/State_Provided_Data/VERMONT_statedata_publiconline_sewersheds.shp"))%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(sSYSNAME)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "VT", ID = paste0("VT-",rownames(.)))%>%
-  select(State,ID,sSYSNAME)%>%
-  setNames(c("State","ID","Name","geometry"))
-
-# West Virginia
-wv <- st_read(here("Data/State_Provided_Data/West_Virginia.shp"))%>%
-  st_transform(st_crs(4269))%>%
-  st_make_valid()%>%
-  group_by(Utility)%>%
-  summarise()%>%
-  st_make_valid()%>%
-  mutate(State = "WV", ID = paste0("WV-",rownames(.)))%>%
-  select(State,ID,Utility)%>%
-  setNames(c("State","ID","Name","geometry"))
-
-# Combine and project to albers equal area
-swr.st <- ct%>%
-  bind_rows(md,nh,ny,nj,nc,ri,tx,vt,wv)%>%
-  select(State,ID,Name)%>%
-  st_transform(st_crs(5070))%>%
-  st_make_valid()%>%
-  mutate(Swr_Area = as.numeric(st_area(.))/1000000)
-
-geo.check <- as.data.frame(table(st_geometry_type(swr.st)))%>%
-  filter(Freq > 0)
-```
-
-
-### Appending Spatial Data to Sewershed Boundaries
-
-The next step is to append other geographic data to these boundaries. We'll use a few different geographic units available from the census to give us a few fields to perform name matching to the CWNS. We'll also calculate a couple of spatial metrics to try to understand the level of detail of the boundaries. Many of these systems are broken into polygons already.
-
-- Place Name
-- Sub-County Name
-- County Name
-- Area Metrics for intersections
-- Number of Polygons per system
-- Number of Vertices divided by boundary length
-  - We convert the polygons to multi-linestrings and calculate the overall distance, then convert those multi-linestrings to points and divide the number of vertices by overall length (in kilometers).
-  
-#### Place Names
-
-```{r places, eval = FALSE}
-places <- tigris::places(state=unique(swr.st$State))%>%
-  st_transform(st_crs(5070))%>%
-  st_make_valid()%>%
-  mutate(Place_Area = ALAND/1000000)%>%
-  select(STATEFP,GEOID,NAME,Place_Area)
-colnames(places)[2:3] <- c("GEOID_Place","Place_Name")
-
-swr.st.place <- st_intersection(swr.st,places)%>%
-  mutate(Place_Intrsct_Area = as.numeric(st_area(.))/1000000)%>%
-  st_drop_geometry()%>%
-  mutate(Pct_Place_in_S = 100*(Place_Intrsct_Area/Place_Area),
-         Pct_S_in_Place = 100*(Place_Intrsct_Area/Swr_Area))%>%
-  select(ID,Name,GEOID_Place,Place_Name,Place_Area,Place_Intrsct_Area,Pct_Place_in_S,Pct_S_in_Place)
-```
-
-#### County Sub-Divisions
-
-```{r countySubs, eval = FALSE}
-# County subdivisions must be looped, as we can only pull one state at a time
-swr.st.cntySub <- data.frame()
-
-for(st in unique(swr.st$State)){
-  st.filt <- swr.st%>%
-    filter(State == st)
-  
-  county.subs <- tigris::county_subdivisions(state = st)%>%
-  st_transform(st_crs(5070))%>%
-  st_make_valid()%>%
-  mutate(Cnty_Sub_Area = ALAND/1000000)%>%
-  select(STATEFP,COUNTYFP,GEOID,NAME,Cnty_Sub_Area)
-  
-  colnames(county.subs)[3:4] <- c("GEOID_Cnty_Sub","Cnty_Sub_Name")
-
-  swr.st.cntysub.filt <- st_intersection(st.filt,county.subs)%>%
-    mutate(Cnty_Sub_Intrsct_Area = as.numeric(st_area(.))/1000000)%>%
-    st_drop_geometry()%>%
-    mutate(Pct_CS_in_S = 100*(Cnty_Sub_Intrsct_Area/Cnty_Sub_Area),
-           Pct_S_in_CS = 100*(Cnty_Sub_Intrsct_Area/Swr_Area))%>%
-    select(ID,Name,STATEFP,COUNTYFP,GEOID_Cnty_Sub,Cnty_Sub_Name,Cnty_Sub_Area,
-           Cnty_Sub_Intrsct_Area,Pct_CS_in_S,Pct_S_in_CS)
-  
-  swr.st.cntySub <- rbind(swr.st.cntySub,swr.st.cntysub.filt)
-}
-
-
-```
-
-
-#### Detail Metrics
-
-The number of polygons is a bit tricky. In some cases systems are combined into multipolygons whereas in other cases, the same system may be broken into separate rows for each polygon of the same system. For now, we'll break multipolygons into polygons and re-aggregate everything by system name.
-
-```{r detailMets, eval = FALSE}
-# Combine polygons
-polygons <- swr.st%>%
-  st_cast("MULTIPOLYGON")%>%
-  st_cast("POLYGON")
-
-# Count polygons
-poly.count <- polygons%>%
-  st_drop_geometry()%>%
-  group_by(Name)%>%
-  summarise(State = State[1],
-            nParts = n())
-
-# Cast to lines and sum length
-ss.lines <- polygons%>%
-  st_cast("MULTILINESTRING")%>%
-  # Equidistant projection
-  st_transform(st_crs("ESRI:53027"))%>%
-  mutate(Length = as.numeric(st_length(.)))
-
-bndry.length <- ss.lines%>%
-  st_drop_geometry()%>%
-  group_by(ID)%>%
-  summarise(Length_Km = sum(Length)/1000)
-
-# Cast to points and count number of vertices
-ss.pts <- ss.lines%>%
-  st_cast("MULTIPOINT")%>%
-  st_cast("POINT")%>%
-  st_drop_geometry()%>%
-  group_by(ID)%>%
-  summarise(Vertices = n())
-
-# Compile descriptive dataset of sewersheds
-ss.all <- swr.st%>%
-  left_join(ss.pts)%>%
-  left_join(bndry.length)%>%
-  left_join(poly.count)%>%
-  mutate(Pts_Km = Vertices/Length_Km)%>%
-  st_transform(st_crs(4326))%>%
-  st_make_valid()
-
-st_write(ss.all, here("Data/Validation/State_Sewersheds.gpkg"),layer = "Name_Combined_Sewersheds")
-
-# Export related table
-r.df <- ss.all%>%
-  st_drop_geometry()%>%
-  select(!Name)%>%
-  left_join(swr.st.cntySub)%>%
-  select(!Name)%>%
-  left_join(swr.st.place)
-
-vroom_write(r.df,here("Data/Validation/Name_Combined_Related_Stats1.csv"), delim = ",", append = FALSE)
-
-```
-
-
-```{r loadCreated, echo = FALSE}
-ss.all <- st_read(here("Data/Validation/State_Sewersheds.gpkg"),layer = "Name_Combined_Sewersheds", quiet = TRUE)
-r.df <- vroom(here("Data/Validation/Name_Combined_Related_Stats1.csv"), show_col_types = FALSE)
-```
-
-
-### Breakdown of Detail Findings
-
-After the data cleaning, we have `r format(nrow(ss.all), big.mark = ",")` unique sewersheds.
-
-```{r ssByState}
-ggplot(ss.all)+
-  geom_histogram(aes(x = State), stat = "count", color = "black", fill = "#a04bb8")+
-  labs(title = "Count of State Sewersheds", x = "", y = "# of Systems")
-
-```
-
-
-#### Number of Disconnected Polygons
-
-This plot shows a histogram of how many disconnected parts each system has. The vast majority of systems are interconnected, which is what we would expect. 
-
-```{r}
-ggplot(ss.all)+
-  geom_histogram(aes(x = nParts), binwidth = 1, fill = "#45abbf", color = "black")+
-  coord_cartesian(xlim = c(0,25))+
-  labs(title = "Count of Disconnected Areas",subtitle = "(State Sewersheds)", x = "# of Polygons", y = "# of Systems")
-```
-
-#### Boundary Detail
-
-For each boundary, we calculated the number of vertices per kilometer of boundary. This can give us an indication of how detailed a boundary was created. We must use caution here however, because if a system boundary is identical to an administrative boundary, then we are only reviewing the level of detail of the administrative boundary. We can contextualize this problem by looking at administrative boundary overlap, which we do next.
-
-Summary Statistics for ${Vertices/kilometer}$:
-
-```{r boundaryDetail}
-summary(ss.all$Pts_Km)
-
-ggplot(ss.all)+
-  geom_histogram(aes(x = Pts_Km), fill = "#63a843", color = "black")+
-  labs(title = "Level of Boundary Detail", x = "Vertices / Kilometer", y = "# of Systems")
-```
-
-#### Administrative Overlap
-
-There are likely cases where sewersheds are in fact identical or very similar to administrative boundaries, such as a city or a town. However, we would hope to see more detail than an entire administrative boundary. For example, there are areas in almost every city or town that have no infrastructure at all, like farmland or undeveloped area. We intersected these state-sourced boundaries with county subdivisions and also with census places. We calculated the % of a boundary that is within these administrative boundaries and conversely, the % of the administrative boundaries within the sewersheds. If both of these values are close to 100%, then both boundaries are essentially identical.
-
-**County Sub-Divisions**
-The plot below shows a comparison of these areas, with the red box in the top-right illustrating sewersheds that are essentially identical to a county subdivision. Within that red box are 17 sewersheds (0.6% of systems)
-
-```{r cntySubIdent}
-cs.ident <- r.df%>%
-  filter(Cnty_Sub_Area>0)%>%
-  select(State,ID,Pct_CS_in_S,Pct_S_in_CS)%>%
-  distinct()%>%
-  mutate(Pct_CS_in_S = ifelse(Pct_CS_in_S>100,100,Pct_CS_in_S),
-         Pct_S_in_CS = ifelse(Pct_S_in_CS>100,100,Pct_S_in_CS))
-
-ggplot(cs.ident)+
-  geom_point(aes(x = Pct_CS_in_S, y = Pct_S_in_CS), alpha = 0.5)+
-  geom_rect(xmin = 95, xmax=101, ymin= 95, ymax = 101, color = "red", fill = NA)+
-  labs(title = "County Subdivision Overlap", x = "% of County-Subdivision in Sewershed",
-       y = "% of Sewershed in County-Subdivision")
-
-```
-
-**Census Places**
-The plot below shows the same comparrison for census places. There are 106 sewersheds (3.7%) that have greater than 95% overlap with an intersecting census place.
-
-```{r placeIdent}
-place.ident <- r.df%>%
-  filter(Place_Area>0)%>%
-  select(State,ID,Pct_Place_in_S,Pct_S_in_Place)%>%
-  distinct()%>%
-  mutate(Pct_Place_in_S = ifelse(Pct_Place_in_S>100,100,Pct_Place_in_S))
-
-ggplot(place.ident)+
-  geom_point(aes(x = Pct_Place_in_S, y = Pct_S_in_Place), alpha = 0.5)+
-  geom_rect(xmin = 95, xmax=101, ymin= 95, ymax = 101, color = "red", fill = NA)+
-  labs(title = "Census Place Overlap", x = "% of Census Place in Sewershed",
-       y = "% of Sewershed in Census Place")
-
-```
-
-In total, it seems as if the sewershed boundaries we have are largely **not** administrative boundaries. With respect to the other metrics we developed, we will need to do some deeper investigating using visual inspection to determine what constitutes a detailed boundary.
-
-
-## Joining Validation Boundaries to CWNS Locations
-
-Now that we have a set of boundaries that refer to treatment systems, we need to compare the locations to the data we have from the CWNS. Here we investigate:
-
-- How many systems do we have boundaries for?
-- How well do treatment plants match up to these boundaries?
-  - Are there more than one treatment plant within any boundaries?
-  - Are some treatment plants outside of the boundaries?
-  - How well do the names match between the state datasets and the CWNS?
+### Matching Utility Sourced Boundaries to CWNS Locations
+Utility sourced sewersheds had to be matched with their corresponding CWNS endpoint locations as there is no common identifier between the two datasets. Matching was done through a combination of spatial intersections, distance measurements, text similarity between names and individual visual inspection.
 
 
 ```{r cwnsJoin, eval=FALSE}
@@ -663,109 +271,11 @@ st_write(ep,here("Data/Validation/Validation.gpkg"),layer = "endpoints")
 
 ```
 
+Boundaries were spatially intersected with endpoints. For each match between a boundary and an endpoint, the total number of endpoints that intersect a boundary is divided by 1. For example, if only one endpoint exists within a boundary, the value would be 1. If 3 endpoints intersect a boundary, the value for all three matches (which are represented as three separate rows) would be 0.33. This score is labeled 'I_Score' or $S_i$
 
-### Number of Systems by State in CWNS
+For boundaries that do not intersect any endpoints, a buffer is applied using a distance of 16 kilometers, which was found to be the 95% confidence level for maximum distance between an endpoint and a service area (See 'Analysis/Endpoint_Sewershed_Distance/Endpoint_Sewershed_Distance.html' for more detailed information). Only endpoints that have not already been singularly intersected with boundaries are considered in this step. The distance of each endpoint from the edge of the boundary is divided by 16 and then subtracted from 1: $D_{score}=1-(d/16)$, where 'd' is the distance in kilometers. This yields a score such that the closest endpoint will have the highest score. This score is labeled 'D_Score' or $S_d$.
 
-As a starting point, we need to compare the number of system boundaries we have for each state with the number of systems the CWNS lists in each state. In this plot, we would expect (hope) to have about the same number of each, or perhaps almost as many state boundaries as CWNS systems. There are 4 states, however, that have more state boundaries than CWNS systems. This could indicate a problem with how we aggregated the boundaries. 
-
-```{r}
-intrsct.df <- vroom(here("Data/Validation/CWNS_Intersection.csv"))
-ep <- st_read(here("Data/endpoints_04042025.shp"))%>%
-  filter(STATE_CODE %in% intrsct.df$STATE_CODE)
-
-# Count of endpoints by state
-state.ep <- ep%>%
-  st_drop_geometry()%>%
-  group_by(STATE_CODE)%>%
-  summarise(nSystems = n())
-
-# Count boundaries by state
-state.ss.counts <- ss.all%>%
-  st_drop_geometry()%>%
-  group_by(State)%>%
-  summarise(Boundaries = n())
-
-count.compare <- state.ep%>%
-  left_join(state.ss.counts, by = c("STATE_CODE"="State"))
-
-ggplot(count.compare)+
-  geom_col(aes(x = nSystems, y = STATE_CODE, fill = "CWNS"), width = 0.2, just = 0)+
-  geom_col(aes(x = Boundaries, y = STATE_CODE, fill = "State Boundaries"), width = 0.2, just = 1)+
-  scale_fill_manual(values = c("CWNS"="#3bd4ba","State Boundaries" = "#bf6a39"))+
-  labs(title = "CWNS vs. State Boundary Counts", x = "# of Systems", y = "State", fill = "")
-
-```
-
-### System Matching Classification
-
-For each CWNS endpoint, we determine if it:
-
-- intersected no boundary (0)
-- intersected a single boundary (1)
-- intersected multiple boundaries (2)
-
-The results of this are plotted below and show that many endpoints do not intersect any state boundaries. In this case, we need to conduct further analysis to include a distance buffer for boundaries with no intersecting endpoint.2
-
-```{r}
-no.intrsct <- ep%>%
-  st_drop_geometry()%>%
-  filter(!CWNS_ID %in% intrsct.df$CWNS_ID)%>%
-  select(CWNS_ID,STATE_CODE)%>%
-  mutate(nIntersections = 0)
-
-i.count <- intrsct.df%>%
-  group_by(CWNS_ID)%>%
-  summarise(STATE_CODE = STATE_CODE[1],
-            nIntersections = n())%>%
-  rbind(no.intrsct)
-
-ggplot(i.count)+
-  geom_histogram(aes(x = nIntersections))+
-  scale_x_continuous(breaks = c(0,1,2))+
-  labs(title = "# Boundaries Intersected by Endpoints", x = "State Boundaries",
-       y = "CWNS Endpoints")+
-  facet_wrap(~STATE_CODE, scales = "free")
-
-```
-
-
-We then do the same for the state boundaries
-
-```{r}
-no.intrsct <- ss.all%>%
-  st_drop_geometry()%>%
-  filter(!ID %in% intrsct.df$ID)%>%
-  select(ID,State)%>%
-  mutate(nIntersections = 0)
-
-i.count <- intrsct.df%>%
-  group_by(ID)%>%
-  summarise(State = State[1],
-            nIntersections = n())%>%
-  rbind(no.intrsct)
-
-ggplot(i.count)+
-  geom_histogram(aes(x = nIntersections))+
-  #scale_x_continuous(breaks = c(0,1,2))+
-  labs(title = "# Endpoints Intersected by Boundaries", x = "CWNS Endpoints",
-       y = "State Boundaries")+
-  facet_wrap(~State, scales = "free")
-
-```
-
-
-
-
-
-## Selecting the Validation Set
-
-To train the model, we need validation data. The validation data we use will dictate how the model behaves and ultimately how well it performs. It is important to remember that knowing where areas **are not** served by wastewater collection systems is just as important as knowing where areas are served. Therefore, we cannot use a an entire state for validation if it is missing a lot of service boundaries. In order to maximize our training set however, we can look at county level data. Our validation data will be composed of counties that have complete and accurate sewershed boundaries. To determine the universe of sewersheds for each county, we execute a spatial join between the endpoints from the CWNS and a county spatial file. We are assuming that endpoints are located within the counties they serve. To determine if a boundary is joined to the correct CWNS endpoint, we apply a multi-step score calculation which includes the following:
-
-- Boundaries are spatially intersected with endpoints. For each match between a boundary and an endpoint, the total number of endpoints that intersect a boundary is divided by 1. For example, if only one endpoint exists within a boundary, the value would be 1. If 3 endpoints intersect a boundary, the value for all three matches (which are represented as three separate rows) would be 0.33. This score is labeled 'I_Score' or $S_i$
-
-- For boundaries that do not intersect any endpoints, a buffer is applied using a distance of 16 kilometers, which we have found to be the 95% confidence level for maximum distance between an endpoint and a serviced area (See 'Analysis/Endpoint_Sewershed_Distance/Endpoint_Sewershed_Distance.html' for more detailed information). Only endpoints that have not already been singularly intersected with boundaries are considered in this step. The distance of each endpoint from the edge of the boundary is divided by 16 and then subtracted from 1: $D_{score}=1-(d/16)$, where 'd' is the distance in kilometers. This yields a score such that the closest endpoint will have the highest score. This score is labeled 'D_Score' or $S_d$.
-
-- For each pair of matches (CWNS <-> State Boundary), we calculate a fuzzy score to compare the given names of the treatment works. A score of zero indicates that the names are completely dissimilar whereas a score of 1 indicates identical names. This score is labeled 'F_Score' or $S_f$. The method we use is the 'Jaro-Winkler' distance:
+For each pair of matches (CWNS <-> State Boundary), a fuzzy score was calculated to compare the given names of the treatment works. A score of zero indicates that the names are completely dissimilar whereas a score of 1 indicates identical names. This score is labeled 'F_Score' or $S_f$. The method we use is the 'Jaro-Winkler' distance:
 
 | "The Jaro-Winkler distance (method=jw, 0<p<=0.25) adds a correction term to the Jaro-distance. It is defined as d − l · p · d, where d is the Jaro-distance. Here, l is obtained by counting, from the start of the input strings, after how many characters the first character mismatch between the two strings occurs, with a maximum of four. The factor p is a ’prefix’ factor, which in the work of Winkler is often chosen 0.1."
 
@@ -864,284 +374,41 @@ vroom_write(df.sm,here("Data/Validation/M_Scores.csv"), delim = ",")
 ```
 
 
-### Match Results
 
-The final count of state boundaries we were able to match to the CWNS was 2,552. 1,303 state boundaries intersected at least one CWNS endpoint. 1,283 boundaries did not directly intersect a CWNS endpoint, but were within 16 kilometers of 1. After calculating the total match score, there were 4 boundaries that had the exact same score relating to two separate CWNS endpoints.
 
-#### Histogram of Intersect Scores
+### Spatial Resolution
 
-```{r}
-df.si <- vroom(here("Data/Validation/I_Scores.csv"), show_col_types = FALSE)
-df.sd <- vroom(here("Data/Validation/D_Scores.csv"), show_col_types = FALSE)
-df.sf <- vroom(here("Data/Validation/F_Scores.csv"), show_col_types = FALSE)
-df.sm <- vroom(here("Data/Validation/M_Scores.csv"), show_col_types = FALSE)
+Hexagons were chosen as the spatial unit for the model for several reasons. Hexagons are roughly the same size across the United States, they allow for more consistent statistical calculations related to area and distance and density values do not need to be calculated. Hexagons also allow for more complex network calculations at higher computation rates because distance can be inferred as a constant between each neighboring pair of hexagons. Finally, hexagons offer an advantage to census blocks, which are delineated based on physical boundaries such as roads and rivers, which can include undeveloped areas, especially in rural settings. Using hexagons allows us to create more detailed sewersheds while reducing overall computation requirements. For this modeling effort, level 9 hexagons were used, which are ~0.11 km^2 in area.
 
-ggplot(df.si)+
-  geom_histogram(aes(x = I_Score, fill = STATE_CODE))+
-  labs(x = "I_Score", y = "# of State Boundaries", fill = "State")
-```
+![A satelite image of Piedmont, MO illustrating hexagons with buildings, overlaid by census block boundaries.](img/Hex_Example.png){#fig-hex fig-alt="A map of a rural town showing that hexagons improve the detail of developed area relative to census blocks." fig-align="left" width=50%}
 
-#### Histogram of Distance Scores
+### Model Development
+The goal of the model is to predict whether a hexagon is sewered by a specific endpoint. Essentially the model is answering two questions. **1.** Is the hexagon connected to sewer? and **2.** If so, which endpoint is the most likely to serve that hexagon? The model is therefore a binary classification model, which returns a probability that a hexagon is part of the sewershed for a given endpoint location. The model considers each row of a table as a unique pairing between a specific hexagon and a specific endpoint. Additional data within each row are the 'features' which are predictor variables relating to physical, environmental and demographic variables unique to that pairing.
 
-```{r}
-labs <- data.frame(x = c(0.1,0.9), y = c(500,500), label = c("Farther","Closer"))
+#### Defining Area of Consideration
+To minimize computation time and increase efficiency, utility sourced sewersheds were used to test the maximum distance between an endpoint and the furthest possible hexagon that is served by that endpoint. 
 
-ggplot(df.sd)+
-  geom_histogram(aes(x = D_Score, fill = substr(State_ID,1,2)))+
-  geom_segment(aes(x = 0.2, y = 500, xend = 0.8, yend = 500),
-                  arrow = arrow(length = unit(0.5, "cm")),linewidth = 1)+
-  geom_label(data = labs, aes(x=x,y=y,label=label))+
-  labs(x = "D_Score", y = "# of State Boundaries", fill = "State")
-```
 
+#### Feature Engineering
+In machine learning, 'features' refer to the input data that will act as predictors for the model. 'Feature engineering' therefore refers to the methods we use to prepare the data so that it contributes to a successful model. The primary source for the sewershed model is the CWNS, which includes the locations of treatment plants that are considered 'endpoints', meaning that it is the final stop for wastewater before being discharged back into the environment. The sewershed is therefore the entire contributing area that discharges wastewater to each endpoint.
 
-#### Histogram of String Distance Scores
+Sewered areas are typically developed, have relatively dense populations and are close to a treatment plant. Information fed into the model must provide relevant tools for relationships to be determined. For example, sewer systems, unlike public water systems, are generally not pressurized, meaning that elevation may be a factor. The distance between a hexagon and a treatment plant may vary depending on how many people the treatment plant serves. A hexagon with no population, but with several large buildings and very little green space may indicate an industrial zone.
 
-The following histogram illustrates every F_Score returned from all possible matches.
-
-```{r}
-ggplot(df.sf)+
-  geom_histogram(aes(x = F_Score, fill = substr(State_ID,1,2)))
-```
-
-
-#### High Scores
-
-**Total Match Score**
-
-The following plots illustrate only the scores that were used to find the highest match score for each state boundary.
-
-```{r}
-ggplot(df.sm)+
-  geom_histogram(aes(x = M_Score, fill = substr(State_ID,1,2)))+
-  labs(fill = "State")
-```
-
-
-**Composition of Scores**
-
-```{r}
-ggplot(df.sm)+
-  geom_point(aes(x = I_Score, y = F_Score, fill = M_Score, shape = "I_Score"))+
-  geom_point(aes(x = D_Score, y = F_Score, fill = M_Score, shape = "D_Score"))+
-  scale_fill_viridis_c()+
-  scale_shape_manual(values = c("I_Score"=21,"D_Score"=23))+
-  xlim(0.01,1)+
-  labs(x = "Intersection / Distance Component", y = "String Distance Component")
-```
-
-
-
-### Select Validation Counties
-
-Here, we define the universe of systems for each county in the 10 states we have boundaries for, then determine the counties for which we have 100% data. From there, we will investigate the match scores by county. We want to make sure we have enough counties for model training while also maximizing the match scores within those counties.
-
-
-```{r, eval = FALSE}
-# Intersect endpoints with counties
-fips <- select(tigris::fips_codes,state_code,state)%>%
-  distinct()
-counties <- tigris::counties()%>%
-  left_join(fips, by = c("STATEFP"="state_code"))%>%
-  filter(state %in% ss.all$State)%>%
-  st_transform(st_crs(ep))
-
-# Intersect endpoints with counties
-cnty.ep.intrsct <- st_intersection(ep,counties)
-
-# Intersect boundaries with counties
-cnty.bndry.intrsct <- st_intersection(ss.all,counties)
-
-
-
-
-
-# Count systems by county
-cnty.counts <- cnty.ep.intrsct%>%
-  st_drop_geometry()%>%
-  group_by(STATEFP,COUNTYFP)%>%
-  summarise(State = STATE_CODE[1],
-            nSystems = n())%>%
-  ungroup()
-
-# Count number of matched systems by county
-cnty.match.counts <- cnty.ep.intrsct%>%
-  st_drop_geometry()%>%
-  filter(CWNS_ID %in% df.sm$CWNS_ID)%>%
-  group_by(STATEFP,COUNTYFP)%>%
-  summarise(nMatches = n())%>%
-  ungroup()
-
-cnty.compare <- counties%>%
-  select(STATEFP,COUNTYFP,NAME)%>%
-  left_join(cnty.counts, by = c("STATEFP","COUNTYFP"))%>%
-  left_join(cnty.match.counts, by = c("STATEFP","COUNTYFP"))%>%
-  mutate(nMatches = replace_na(nMatches,0),
-         Pct_Matched = 100*(nMatches/nSystems),
-         nClass = ifelse(nSystems ==1,"1",
-                         ifelse(nSystems<5,"2-4",
-                                ifelse(nSystems < 10,"5-9","10+"))))
-
-st_write(cnty.compare,here("Data/Validation/Validation.gpkg"), layer = "County_Compare")
-st_write(cnty.ep.intrsct,here("Data/Validation/Validation.gpkg"), layer = "County_EP_Intersect")
-```
-
-
-#### Count of CWNS Systems by County
-
-```{r cntycmpr, eval = FALSE}
-cnty.compare <- st_read(here("Data/Validation/Validation.gpkg"), layer = "County_Compare")
-cnty.ep.intrsct <- st_read(here("Data/Validation/Validation.gpkg"), layer = "County_EP_Intersect")
-ggplot(cnty.compare)+
-  geom_sf(aes(fill = fct_reorder(nClass,nSystems)))+
-  scale_fill_manual(values = c("1"="#feebe2","2-4" = "#fbb4b9",
-  "5-9"="#f768a1","10+"="#ae017e"))+
-  labs(fill = "# CWNS Systems")
-```
-
-
-#### Percent of Systems Matched by County
-
-```{r ccp, eval = FALSE}
-ggplot(cnty.compare)+
-  geom_sf(aes(fill = Pct_Matched))+
-  scale_fill_viridis_c()+
-  labs(fill = "% Matched Systems")
-```
-
-```{r ccp2, eval = FALSE}
-ggplot(cnty.compare)+
-  geom_histogram(aes(x = Pct_Matched), color = "black", fill = "#5e88cc",binwidth = 1)+
-  labs(title = "Percent Matched by County", x = "% Matched", y = "# of Systems")
-```
-
-#### Match Scores in 100% Complete Counties
-```{r, eval = FALSE}
-# Subset counties that are 100% Complete
-complete.counties <- cnty.compare%>%
-  filter(Pct_Matched == 100)%>%
-  mutate(ST_CNTY = paste0(STATEFP,COUNTYFP))
-
-# Subset matches by complete counties
-ep.cmplt <- cnty.ep.intrsct%>%
-  mutate(ST_CNTY = paste0(STATEFP,COUNTYFP))%>%
-  filter(ST_CNTY %in% complete.counties$ST_CNTY)%>%
-  left_join(df.sm, by = c("CWNS_ID"))
-
-ggplot(ep.cmplt)+
-  geom_histogram(aes(x = M_Score), color = "black", binwidth = 0.1)+
-  labs(title = "Match Scores for Systems in 100% Complete Counties")
-
-```
-
-```{r, eval = FALSE}
-#calculate mean match score by county in 100% complete counties
-pctScore.county <- ep.cmplt%>%
-  st_drop_geometry()%>%
-  group_by(ST_CNTY)%>%
-  summarise(Mean_Score = mean(M_Score))
-
-cnty.scores <- cnty.compare%>%
-  mutate(ST_CNTY = paste0(STATEFP,COUNTYFP))%>%
-  left_join(pctScore.county)
-
-
-ggplot(cnty.scores)+
-  geom_sf(aes(fill = Mean_Score))+
-  scale_fill_viridis_c()
-```
-
-#### Final Selection
-
-Using the information we have developed for the systems and counties described here, we select counties that have 100% of their systems succesfully matched and require that the average of all scores within each county be at least 1.5. This leaves us with 107 counties, containing a total of 482 sewersheds. These can now be visually inspected to verify detail and matching.
-
-```{r, eval = FALSE}
-final.counties.filt <- cnty.scores%>%
-  filter(Mean_Score >= 1.5)
-
-# Get county populations
-cnty.pops <- vroom(here("Data/nhgis/nhgis0347_ds262_20225_county.csv"))%>%
-  mutate(ST_CNTY = paste0(STATEA,COUNTYA))%>%
-  select(ST_CNTY,AQNFE001)%>%
-  setNames(c("ST_CNTY","Population"))
-
-# Join county fips to boundaries
-cnty.boundaries <- counties%>%
-  mutate(ST_CNTY = paste0(STATEFP,COUNTYFP))%>%
-  select(ST_CNTY,state,NAMELSAD)%>%
-  left_join(cnty.pops)%>%
-  filter(ST_CNTY %in% final.counties.filt$ST_CNTY)
-  
-st_write(cnty.boundaries,here("Data/Validation/Validation.gpkg"), layer = "Validation_Counties_FR", append = FALSE)
-st_write(cnty.boundaries,here("Inspect_Validation/Data/Validation.gpkg"), layer = "Validation_Counties_FR", append = FALSE)
-
-# Spatial file of validation endpoints
-# Include endpoints in < 100% counties whose matched boundaries extend into 100% boundaries
-
-cnty.ep.overflow <- vroom(here("Inspect_Validation/Data/County_Boundaries.csv"))%>%
-  filter(GEOID %in% final.counties.filt$ST_CNTY)
-  
-final.ep.filt <- ep.cmplt%>%
-  filter(ST_CNTY %in% final.counties.filt$ST_CNTY | State_ID %in% cnty.ep.overflow$ID)
-
-st_write(final.ep.filt,here("Data/Validation/Validation.gpkg"), layer = "Validation_Endpoints_FR", append = FALSE)
-st_write(final.ep.filt,here("Inspect_Validation/Data/Validation.gpkg"), layer = "Validation_Endpoints_FR", append = FALSE)
-
-
-# Include boundaries that overlap 100% counties, even if their endpoints are in another county (this is important for validation)
-bndry.cnty.intersection <- vroom(here("Inspect_Validation/Data/County_Boundaries.csv"))%>%
-  filter(GEOID %in% final.ep.filt$ST_CNTY)
-
-# Spatial file of validation boundaries
-final.sb <- ss.all%>%
-  filter(ID %in% final.ep.filt$State_ID | ID %in% bndry.cnty.intersection$ID)
-
-st_write(final.sb,here("Data/Validation/Validation.gpkg"), layer = "Validation_Boundaries_FR", append = FALSE)
-st_write(final.sb,here("Inspect_Validation/Data/Validation.gpkg"), layer = "Validation_Boundaries_FR", append = FALSE)
-
-# save endpoints that were not matched
-ep.nomatch <- cnty.ep.intrsct%>%
-  filter(!CWNS_ID %in% final.ep.filt$CWNS_ID)
-st_write(ep.nomatch,here("Data/Validation/Validation.gpkg"), layer = "Validation_Endpoints_NoMatch", append = FALSE)
-st_write(ep.nomatch,here("Inspect_Validation/Data/Validation.gpkg"), layer = "Validation_Endpoints_NoMatch", append = FALSE)
-```
-
-### Review of Validation Data
-The 107 counties selected as potential validation areas were put into an interactive web application for review by the research team. Researchers used the application to view each county one at a time to determine if the boundaries were accurate and if the endpoints were correctly matched. The application allowed for the following:
-
-- View Match Scores
-- View Boundary Detail
-- View Endpoint Locations
-- Write Notes on Each County
-- Select Common Errors
-- Flag a County for Further Review
-- Review Decisions Made by Team Members
-
-![](img/App_1.png)
-![](img/App_2.png)
-
-Upon review by the research team, all counties that were unanimously decided to be accurate were selected for the final validation dataset. Counties where there was disagreement among research team members were discussed by the team as a whole and a final decision was made. In total, 49 counties were selected for the final validation dataset.
-
-### Endpoint Location Review
-
-As part of the review process, if an endpoint was determined to be mismatched or in an incorrect location, attempts were made to re-locate the endpoint. This was done by examining the endpoint's name and location in the CWNS dataset and then either performing a web search to find the correct location, or by comparing with data from Open Street Map (OSM). OSM maintains a classification of feature called 'Man Made - Wastewater Plant', which can have user-provided names attached to the feature. For more information, refer to the notebook located at 'Analysis/OSM/OSM_Data/html'. If the facility was found, the location was recorded and the endpoint was moved to that location. If the facility was not found, the endpoint was removed from the dataset. In total, 8 endpoints were re-located.
-
-
-# Development of Input Data
+The following features were created and tested for inclusion in the model:
 
 The random forest model requires several input datasets, which will provide contextual information to help it determine of an area is served by a public wastewater collection system, and which collection system it is served by. These data must be prepared to conform to our output geospatial data, which are level 9 H3 hexagons. The hexagons are roughly 0.1 km<sup>2</sup> in area. Here, we describe each input dataset and how it was developed to conform to the hexagon grid.
 
-## 1990 Census Data
+##### 1990 Census Data
 
 Data included from the 1990 census includes total population and housing units (1990 Census: STF 1 - 100% Data); estimated number of housing units on public sewer and estimated number housing units on public water (1990 Census: STF 3 - Sample-Based Data).
 
 1990 Census data was cross-walked to 2020 boundaries using the cascade weighting method described in Murray & Hall (2024) and the block-to-block crosswalks published by the [IPUMS](https://www.nhgis.org/geographic-crosswalks#from-blocks). Once cross-walked, the data was included with the 2020 Census data described in the next step.
 
 
-## 2020 Census Data
+#####  2020 Census Data
 2020 Census data included 100% counts at the census block level for population, housing units and count of urban/rural population. To convert census blocks into hexagons, a building weighted calculation was performed. Microsoft building footprints larger than 40 square meters (about the size of a detached 2-car garage) were intersected with both hexagons and census blocks. The percent of buildings within each block were calculated for each hexagon and used to weight census data into hexagon parts. Hexagon parts, which were subdivided by census blocks were then re-aggregated to complete hexagons using the H3 Index for each. This yields estimated Census counts at the hexagon level.
 
-## Building Footprints
+#####  Building Footprints
 When the previous step of weighting census data was performed and buildings were intersected with hexagons, a table was saved that included one row for every building, along with its associated hexagon, total area in km<sup>2</sup> and its height as estimated by [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints). Further predictive variables were derived from these data including:
 
 - Mean building area
@@ -1153,17 +420,14 @@ When the previous step of weighting census data was performed and buildings were
 
 For buildings where height was not available, we applied a value of 4.5 meters, which is roughly the height of a one-story building with a roof.
 
-## Land Cover / Land Use
+#####  Land Cover / Land Use
+The National Land Cover Database was used to derive characteristics for each hexagon. Data was obtained in raster format from [MRLC](https://www.mrlc.gov/) and pixels were extracted to each hexagon. We determined the mode (maximum frequency) of each land cover type within each hexagon. Land cover classes that are not part of the four developed classes were binned into either 'water' or 'rural/other' (@fig-NLCD)
 
-The National Land Cover Database was used to derive characteristics for each hexagon. Data was obtained in raster format from [MRLC](https://www.mrlc.gov/) and pixels were extracted to each hexagon. We determined the mode (maximum frequency) of each land cover type within each hexagon.
+!['Bins for NLCD classifications'](img/NLCD_Class.png){#fig-NLCD fig-alt="A table showing the classification of NLCD land cover types into bins for use in the sewershed model." fig-align="left" width=50%}
  
- We also derived impervious surface using the median and mean impervious surface percentage within each hexagon.
+We also derived impervious surface using the median and mean impervious surface percentage within each hexagon.
  
- 
-
-
-## Road Networks
-
+#####  Road Networks
 Variables for roads were derived from the [OSM](https://www.openstreetmap.org/) dataset. For each hexagon, we extracted OSM 'highways' which include the following classifications:
 
 - motorway
@@ -1178,544 +442,189 @@ For detailed information on what each class represents, please see [OSM key:high
 
 We calculated the total road distance within each hexagon in meters.
 
-## Distance and Neighborhood Metrics
+##### Distance and Neighborhood Metrics
+For each hexagon, two neighborhoods were created, one with a radius of 3 hexagons and one with a radius of 9 hexagons. Census data, land cover data and building data were aggregated by neighborhood. For all variables, the neighborhood of each variable represented the sum of the neighborhood, except land cover, which uses the mode and impervious surface, which was calculated both as the mean and median of the neighborhood.
 
-One of the reasons we are using H3 hexagons is because their shape allows for quick and efficient neighborhood or traversal calculations. Hexagons are superior to squares because they have more directional options and given the derived input variables we have already created, it becomes easy to quickly determine information about the surrounding area. For example, when calculating distance to the nearest treatment plant, we can navigate using a simplified road network via the hexagons. This allows the model to have a better understanding of distance to the nearest treatment plant and prevents the model from assuming that a sewer network passes through undeveloped areas or areas of water.
+Distance was calculated in two ways. Euclidean distance was calculated as the shortest number of hexagons between the endpoint and each hexagon. Manhattan distance was calculated as the shortest number of hexagons between the endpoint and each hexagon, which have paved roads that are not large (interstate-style highways.)
 
-- Multiple levels (1-3 hexagon neighborhoods)
-  - Did sewer exist in 1990?
-  - Population Density
-  - Buildings
-  - NLCD
+##### Endpoint Rank
+For each hexagon - Endpoint relationship, the Euclidean distance rank was calculated. For example, for a relationship between a hexagon and an endpoint where there are four other endpoints that are closer, a distance rank of 5 would be assigned. Additionally, the total residential populations served for other endpoints were summed into features representing total population served of closer endpoints and total population served of farther endpoints.
 
-## Determining Maximum Search Distance
+##### Area & Name Matching
+Each hexagon was spatially joined to its parent sub-county, place and county geography (Census Bureau TIGER/Line). The names of each of these geographies was then compared to the facility name of each CWNS endpoint within the area of consideration by using a Jaro-Winkler string distance calculation to determine name similarity score. The Match Score was calculated as whichever of the three scores returned the best result so as to provide flexibility for treatment plants that may be named after geographies of different sizes.
 
-To conserve computation time, we restrict the hexagons we consider for sewersheds based on an analysis of maximum distance for sewer served areas from associated treatment endpoints. For detailed information, refer to 'Analysis/Endpoint_Sewershed_Distance/Endpoint_Sewershed_Distance.html'. The following code was used to determine the maximum search distance (in hexagons) for our hexagons. We found a k_ring distance (radius) of 90 hexagons to equal a radius of 32.1 kilometers, which equals the 99th percentile of maximum distance found in our analysis.
 
-```{r radiusDistance, eval = FALSE}
-# get a hexagon for the center point of UTM Zone 17N (minimizes distortion)
-cp <- st_sf(geometry = st_sfc(st_point(c(-1326954.01,6505062.6)), crs = 26917))%>%
-  st_transform(4326)
+#### Selecting and Splitting the Training and Testing Datasets
 
-cp.coords <- st_coordinates(cp)
+Machine learning models require a training dataset, which is used to train the model to recognize patterns in the data. These patterns are used to create a model, which will be used on additional data to return a probability that a hexagon is part of the sewershed for a given endpoint location. A separate testing dataset, which has not been exposed to the model training process is then used to validate the model and measure performance. To ensure that the model was trained and validated on the best possible data, a linear regression was used to relate the total residential population served by the endpoint in the CWNS with the 2020 census population for the same area. Where the residual of the population for a utility sourced system was more than two standard deviations away from the mean, that sewershed was removed from the training and testing sets, but retained for inclusion in the final dataset.
 
-hex.id <- geo_to_h3(c(55.135, -110.14), 9)
+CWNS endpoints were randomly sampled into either training or testing, with 70% of endpoints used for training and 30% used for testing. The area of consideration for the model to assign probabilities to hexagons is ~3,200 km^2, meaning that there is a class imbalance between hexagons that are 'FALSE' (not sewered by that specific endpoint) and 'TRUE' (sewered by that specific endpoint). This class imbalance was corrected by randomly sampling 'FALSE' hexagons to match the number of 'TRUE' hexagons in the training set.
 
-# Iterate over radii to determine value closest to 32 km.
+### Model Fitting
+A boosted tree model was selected for its ability to resolve complex interactions and for its improved accuracy over decision tree and random forest models, which were tested. The algorithm used was the xgBoost (extreme gradient boosting), obtained through the 'xgboost' package in R. The training data was composed of  200,000 observations (100,000 'TRUE' and 100,000 'FALSE'). The model was tuned to find the optimal parameters for the model which was done using a grid search with 5-fold cross validation. For tuning, 'gbtree' and 'gblinear' methods were tested, with maximum tree depths ranging between 3 and 10, a minimum child weight between 1 and 10, a subsample between 0.5 and 1 and a column sample by tree between 0.5 and 1.
+Early models incorporated all features but were later restricted to features with high importance values.
 
-radius.dists <- data.frame()
+### Constructing Sewersheds from Model Results
+Once the model was applied nationally, probabilities for hexagon-to-endpoint pairs were aggregated into distinct sewersheds for each endpoint. To determine a 'probability threshold', meaning the probability above which is considered a positive result, the model was tested across a classification threshold between 0.01 and 0.99 and broken down by sewershed population. Bins for population served are '< 1,000', '1,000 - 4,999','5,000 - 9,999','10,000 - 99,999' and '10,000 +'. The process for hexagon selection and aggregation is as follows:
 
-for(n in seq(85,95)){
-  # Get neighbors
-  neighbors <- k_ring(hex.id, radius = n)
+1. CWNS endpoints are ranked from smallest to largest 'Total Residential Population'. This ensures that smaller systems take priority over larger systems when a hexagon has more than one high probability and avoids overlapping sewersheds.
+
+2. For each endpoint, hexagons are ranked by descending probability of being part of the sewershed.
+
+3. A cutoff is determined for the number of hexagons to include in the sewershed using the following criteria:
+  - The row at which the cumulative sum of hexagon populations reaches the total residential population reported in the CWNS
+  - The row before the probability drops below the probability threshold.
   
-  # Get sf hexagons and project to UTM 17N then summarize
-  neighbors.sf <- h3_to_geo_boundary_sf(neighbors)%>%
-    st_transform(st_crs(26917))%>%
-    summarise()%>%
-    st_make_valid()
-  
-  # Get bounding box
-  
-  bb <- st_bbox(neighbors.sf)
-  
-  height <- (bb$ymax - bb$ymin)/1000
-  width <- (bb$xmax - bb$xmin)/1000
-
-  radius <- mean(c(height, width))/2
-  
-  newRow <- data.frame(K_Ring = n, Radius_km = radius)
-  
-  radius.dists <- rbind(radius.dists, newRow)
-  
-  print(paste0("Completed ",n))
-}
-
-write.csv(radius.dists, here("Documentation/Data/Radius_Distances.csv"), row.names = FALSE)
-
-ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
-  geom_line()+
-  geom_point()+
-  geom_hline(yintercept = 32, linetype = "dashed", color = "red")+
-  scale_x_continuous(breaks = seq(85,95,1))+
-  labs(title = "Radius of H3 Hexagons vs. K-Ring",
-       x = "K-Ring",
-       y = "Radius (km)")
-```
-
-```{r radiusPlot, echo = FALSE}
-radius.dists <- read.csv(here("Documentation/Data/Radius_Distances.csv"))
-
-ggplot(radius.dists, aes(x = K_Ring, y = Radius_km))+
-  geom_line()+
-  geom_point()+
-  geom_hline(yintercept = 32, linetype = "dashed", color = "red")+
-  scale_x_continuous(breaks = seq(85,95,1))+
-  labs(title = "Radius of H3 Hexagons vs. K-Ring",
-       x = "K-Ring",
-       y = "Radius (km)")
-```
-
-
-### H3 Navigation Example
-
-By extracting the roads to each hexagon, we can start to classify based on road type to give us a more accurate view of how sewers move through towns and cities. For example, we know that sewers usually follow road networks, but are less likely to follow certain road types such as interstate highways and dirt roads. In the first map below, we can see an example of an area in New York with hexagons classified by their most major road type (ignoring interstates and unclassified roads). Imagine the green point represents a home served by sewer and the red dot represents the treatment plant. We can see a straight line distance between the two points travels through undeveloped area.
-
-```{r classifyHexRoads, eval = FALSE}
-library(osmdata)
-# Create Nav Points
-s.coords <- data.frame(x= -72.5850351,y=42.8359840)
-start <- st_as_sf(s.coords,coords = c("x","y"),crs = st_crs(4326))
-
-e.coords <- data.frame(x= -72.5492016,y=42.8410302)
-end <- st_as_sf(e.coords,coords = c("x","y"),crs = st_crs(4326))
-
-# Create line connecting points
-line <- st_sfc(st_linestring(as.matrix(rbind(s.coords,e.coords))), crs = st_crs(4326))
-
-# Get hexagons for area
-area <- st_centroid(line)%>%
-  st_transform(crs = st_crs(5070))%>%
-  st_buffer(2000)%>%
-  st_make_grid(100)%>%
-  st_transform(st_crs(4326))
-
-hex.ids <- unique(h3::geo_to_h3(st_sf(area), 9))
-hex <- h3::h3_to_geo_boundary_sf(hex.ids)
-
-# Download Roads from osm
-bb <- st_bbox(hex)
-
-hwy <- bb%>%
-  opq()%>%
-  add_osm_feature(key = 'highway', value = c("trunk","primary","secondary","tertiary","residential"))%>%
-  osmdata_sf()
-
-hwy.lines <- select(hwy$osm_lines,osm_id,highway)
-
-# Intersect highways with hexagons then convert to equidistant projection and calculate length
-hwy.hex <- st_intersection(hwy.lines,hex)%>%
-  st_transform(st_crs(5070))%>%
-  mutate(length = st_length(.))
-
-# reclassify highway types as numeric with motorway = 1, trunk = 2, etc.
-hwy.hex.class <- hwy.hex%>%
-  st_drop_geometry()%>%
-  mutate(highway_Val = case_when(highway == "trunk" ~ 1,
-                             highway == "primary" ~ 2,
-                             highway == "secondary" ~ 3,
-                             highway == "tertiary" ~ 4,
-                             highway == "residential" ~ 5),
-         highway = factor(highway, levels = c("trunk","primary","secondary","tertiary","residential")))%>%
-  select(h3_index,highway,highway_Val)%>%
-  group_by(h3_index)%>%
-  filter(highway_Val == min(highway_Val))%>%
-  distinct()
-
-hex.hwy <- hex%>%
-  left_join(hwy.hex.class, by = c("h3_index" = "h3_index"))
-
-
-# Save data for quick rendering
-st_write(hex.hwy,here("Documentation/Data/hex_examples.gpkg"), layer = "hex_hwy", append = FALSE)
-st_write(start,here("Documentation/Data/hex_examples.gpkg"), layer = "start", append = FALSE)
-st_write(end,here("Documentation/Data/hex_examples.gpkg"), layer = "end", append = FALSE)
-st_write(line,here("Documentation/Data/hex_examples.gpkg"), layer = "line", append = FALSE)
-```
-```{r classMap}
-hex.hwy <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "hex_hwy", quiet = TRUE)
-start <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "start", quiet = TRUE)
-end <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "end", quiet = TRUE)
-line <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "line", quiet = TRUE)
-
-# Create highway palette
-f.pal <- colorFactor(
-  palette =heat.colors(5,rev=TRUE),
-  domain = hex.hwy$highway)
-
-leaflet()%>%
-  addProviderTiles("Esri.WorldImagery")%>%
-  addPolygons(data = hex.hwy, weight = 1, color = "black",fillColor = ~f.pal(highway), fillOpacity = 0.6)%>%
-  addCircleMarkers(data = start, fillColor = "green", color = "black", weight = 1, opacity = 1, fillOpacity = 1)%>%
-  addCircleMarkers(data = end, fillColor = "red", color = "black", weight = 1, opacity = 1, fillOpacity = 1)%>%
-  addPolylines(data = line, color = "#27d8db",weight = 3, opacity = 1)%>%
-  addLegend("bottomright", pal = f.pal, values = hex.hwy$highway,
-            title = "Road Type",opacity = 1)
-```
-
-
-For each hexagon, we calculate the distance from the treatment plant, we then use a neighborhood function to navigate from the start hexagon to the end hexagon using minimum distance, but only through hexagons with a road type that is likely to have a sewer network. This allows us to calculate a more accurate distance to the treatment plant.
-
-```{r hexNav, eval = FALSE}
-# Identify the h3 level 9 hexagon for the treatment plant
-end.hex <- h3::geo_to_h3(end,9)
-
-end.hex.sf <- h3_to_geo_boundary_sf(end.hex)
-
-# Determine distance for surrounding hexagons
-hex.dist <- k_ring_distances(end.hex, radius = 20)
-
-# filter hexagons based on road type and join distances
-hex.roads <- hex.hwy%>%
-  filter(highway %in% c("trunk","primary","secondary","tertiary","residential"))%>%
-  left_join(hex.dist)
-
-# Identify hexagon of starting point
-start.hex <- h3::geo_to_h3(start,9)
-
-# project hexagons for distance measures
-hex.roads.prj <- hex.roads%>%
-  st_transform(st_crs(5070))
-hex.end.prj <- end.hex.sf%>%
-  st_transform(st_crs(5070))
-
-# Create a loop that uses h3 neighborhood to find the shortest distance to the treatment plant
-hex.current <- start.hex
-# Create an empty data frame to store the navigation
-nav <- data.frame(Nav = 1, h3_index = start.hex)
-n <- 1
-while(!hex.current == end.hex){
-  # Get neighbors
-  neighbors <- h3::k_ring(hex.current,1)
-  
-  # Identify the neighbor that has the smallest distance value in hex.roads
-  neighbor.minDist <- hex.roads.prj%>%
-    filter(h3_index %in% neighbors)%>%
-    filter(distance == min(distance))
-  
-  # If more than one row, calculate straight line distance to treatment plant and use the shorter one
-  if(nrow(neighbor.minDist) > 1){
-    neighbor.minDist <- neighbor.minDist%>%
-      mutate(dist_to_end = as.numeric(st_distance(.,hex.end.prj)))%>%
-      filter(dist_to_end == min(dist_to_end))
-  }
-  
-  # Once a hexagon has been used, remove it
-  hex.roads.prj <- hex.roads.prj%>%
-    filter(!h3_index == hex.current)
-  
-  hex.current <- neighbor.minDist$h3_index[1]
-  
-  # Add to the navigation data frame
-  n <- n+1
-  nav <- rbind(nav,data.frame(Nav = n, h3_index = hex.current))
-  
-  # if loop gets stuck in never-ending loop, break it
-  if(n > 100){
-    break
-  }
-  
-}
-
-# Get centroids for the nav hexagons and draw a line
-nav.centroids <- h3::h3_to_geo_boundary_sf(nav$h3_index)%>%
-  st_centroid()
-
-nav.line <- st_linestring(st_coordinates(nav.centroids))%>%
-  st_sfc(crs = st_crs(4326))%>%
-  st_sf()
-
-nav.smooth <- smoothr::smooth(nav.line,method = "ksmooth")
-
-# Save data for quick rendering
-st_write(nav.smooth,here("Documentation/Data/hex_examples.gpkg"), layer = "navSmooth", append = FALSE)
-
-```
-
-```{r navMap}
-nav.smooth <- st_read(here("Documentation/Data/hex_examples.gpkg"), layer = "navSmooth", quiet = TRUE)
-
-leaflet()%>%
-  addProviderTiles("Esri.WorldImagery")%>%
-  addPolygons(data = hex.hwy, weight = 1, color = "black", fillOpacity = 0)%>%
-  addCircleMarkers(data = start, fillColor = "green", color = "black", weight = 1, opacity = 1, fillOpacity = 1)%>%
-  addCircleMarkers(data = end, fillColor = "red", color = "black", weight = 1, opacity = 1, fillOpacity = 1)%>%
-  addPolylines(data = line, color = "#27d8db",weight = 3, opacity = 1)%>%
-  addPolylines(data = nav.smooth, color = "#34d15e", weight = 3, opacity = 1)
-```
-
-
-
-# Machine Learning
-
-## Feature Engineering
-
-```{r loadTraining, eval = FALSE}
-tt.df <- vroom(here("Documentation/Data/Training_Testing.csv"))
-```
-
-
-A critical step in building a good model is reviewing the distributions of the data to be used as explanatory variables. In some cases, transformations may need to be applied to ensure that the model can make the best use of the data. This may take the form of applying a function to normalize a distribution, or convert a numerical variable to a categorical one. This process is referred to as 'feature engineering; where the explanatory variables are referred to as 'features'. In this section, we describe and show the steps taken to prepare the input data.
-
-
-### Splitting Data into Training and Testing Sets
-Following our review of state supplied sewershed boundaries, 49 counties were identified as having complete and accurate service areas. We randomly selected 25 of these counties to be used for the training set. The remaining 24 counties were set aside for model testing. As we review input features for the model, we focus on two objectives:
-
-1. To ensure values in the testing dataset should resemble the values in the training set. Without a representative sample, the model will struggle to effectively estimate sewer service.
-
-2. To determine the distributions of each feature and determine if transformations should be applied.
-
-
-### Overview of Data and Modeling Strategy
-As previously discussed, we have identified 32 miles as the cutoff beyond which a treatment plant is unlikely to serve a community. To this end, the model will consider characteristics of any sewer collection system within 32 miles for each hexagon. Each row of data therefore represents a single relationship between a single hexagon and a single endpoint. The goal of the model is to predict whether or not that endpoint is associated with a sewershed which serves that hexagon. If a hexagon is within 32 miles of multiple endpoints, it will have multiple rows of data. The row that returns the highest probability will be considered the most likely endpoint for that hexagon. Once the most likely endpoint is identified, the probability will be compared with a cutoff value. Generally, most models use a probability of 0.5 (50%). However, we will determine the optimum threshold through model tuning (described later). If the probability for the most likely endpoint is above the threshold, we assign it to the sewershed assosciated with the corresponding endpoint. If none of the endpoints reach the threshold, the hexagon is determined to be 'Non-Sewered'.
-
-When splitting the data, we make sure the proportion of 'TRUE' and 'FALSE' values are similar. The plot below shows the distributions between sets are indeed similar, which is a good first indicator. However, we see a clear imbalance between the two classes (TRUE & FALSE). We expect this since we know that we have multiple rows for many hexagons and with a radius of 32 miles, most hexagons will not be served by the endpoint they are compared with. This problem is referred to as the 'Class Imbalance Problem'. The issue is that our goal is to map sewersheds, and the nature of the random forest model is to minimize total error, regardless of the class. This means that the model will be biased towards predicting 'FALSE' for most hexagons, which is not what we want. To address this, we will under-sample the 'FALSE' class to balance the outcomes with 'TRUE'. Again, it is critical that we do so in a representative way. 
-
-
-```{r trainTestPlot, eval = FALSE}
-ggplot(tt.df)+
-  geom_bar(aes(x = Correct_CWNS, stat = "count"))+
-  facet_wrap(~Set)+
-  labs(title = "Proportion of Correct to Incorrect Endpoints",
-       x = "Correct Endpoint",
-       y = "# of Hexagons")
-```
-
-### Balancing Training Outcomes
-Our primary concern is the fitting of the model to the training set. We don't need to under sample the testing set because we are not using it to fit the model. An alternative use of the excess testing data is to bin the FALSE  classes into separate testing sets to evaluate effects. The table below shows the number of 'TRUE' values to be ~20,000 in the training and testing sets, which is the value we will use to sample the 'FALSE' class within the training set. We have to be particularly careful here because if our sample includes to many hexagons that are are a greater distance from the endpoint, we may throw off the similarities of the data values. Conversely, we must not exclude farther hexagons excessively or we will not be able to effectively model larger or more disperse systems.
-
-```{r classCount, eval = FALSE}
-# Count number of TRUE and FALSE values between sets
-tt.df.count <- tt.df%>%
-  group_by(Set,Correct_CWNS)%>%
-  summarise(n = n())%>%
-  ungroup()
-
-gt(tt.df.count)%>%
-  tab_header(title = "Count of TRUE and FALSE Values")%>%
-  cols_label(Set = "Set",
-             Correct_CWNS = "Correct Endpoint",
-             n = "# of Hexagons")%>%
-  cols_align(align = "center", columns = everything())%>%
-  tab_options(table.width = px(400))
-```
-
-         
-         
-#### Under-Sampling
-
-To determine the relationships between training and testing and the effect of under-sampling, we will plot the distributions of each variable side-by-side for the original training set, the under-sampled training set and the testing set.
-
-```{r underSample, eval = FALSE}
-# Subset training + False
-train.false <- tt.df%>%
-  filter(Set == "Training" & Correct_CWNS == "FALSE")
-
-# Randomly Sample Rows to return row indices (No Duplicates)
-set.seed(123)
-u.sample <- sample(seq(1,nrow(train.false)), size = 20000, replace = FALSE)
-
-# Create replacement FALSE rows
-u.rows <- train.false[u.sample,]
-
-# Re-Combine TRUE with under sampled FALSE
-train.u <- tt.df%>%
-  filter(Set == "Training" & Correct_CWNS == "TRUE")%>%
-  rbind(u.rows)%>%
-  mutate(Set = "Training_UnderSampled")
-
-
-# Create combined Dataset to generate plots
-compare.sets <- tt.df%>%
-  rbind(train.u)
-
-
-# Create a list of variables to plot
-var.list.n <- c("TOTAL_RES_POPULATION_2022","Near_Rank","distance","nBldgs",
-         "HU_90","HU_20","Pct_Sewer_90","EP_Elevation","EP_Elev_Dif",
-         "Imprv_Med","Strt_Dist","SQ_Dist","Pop_2020","Pop_B","THU_B","Urban_B","Bldgs_B","Med_Bldg_Height",
-         "Mean_Bldg_Height","Med_Bldg_Area","Mean_Bldg_Area","Imprv_Mean",
-         "Pop_3","THU_3","Urban_Pop_3","OHU_90_3","Pub_W_90_3","Pub_S_90_3",
-         "nBldgs_3","Imprv_Med_3","mean_Elev_3","Pop_9","THU_9",
-         "Urban_Pop_9","OHU_90_9","Pub_W_90_9","Pub_S_90_9","nBldgs_9","Imprv_Med_9","mean_Elev_9")
-
-var.list.f <- c("Urban_Rural","NLCD_Class","NLCD_3","NLCD_9")
-library(scales)
-
-for(n in 1:length(var.list.n)){
-  # Create a plot for each variable
-  p <- ggplot(compare.sets)+
-    geom_histogram(aes_string(x = var.list.n[n], fill = "Set"), color = "black")+
-    scale_fill_manual(values = c("#ED9B40","#44CCFF","#745296"))+
-    #scale_x_continuous(labels = label_number(scale_cut = cut_short_scale()))+
-    #scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
-    labs(title = paste0("Distribution of ",var.list.n[n]),
-         x = var.list.n[n],
-         y = "# of Hexagons")+
-    facet_wrap(~Set, ncol = 3, scales = "free")+
-    theme(legend.position = "Bottom")
-  
-  # Save Plot
-  ggsave(here("Documentation/Plots/",paste0(var.list.n[n],".png")), plot = p, width = 6, height = 6,
-         dpi = 500)
-}
-
-for(n in 1:length(var.list.f)){
-  # Create a plot for each variable
-  p <- ggplot(compare.sets)+
-    geom_bar(aes_string(x = var.list.f[n], fill = "Set"), color = "black")+
-    scale_fill_manual(values = c("#ED9B40","#44CCFF","#745296"))+
-    #scale_x_continuous(labels = label_number(scale_cut = cut_short_scale()))+
-    #scale_y_continuous(labels = label_number(scale_cut = cut_short_scale()))+
-    labs(title = paste0("Distribution of ",var.list.f[n]),
-         x = var.list.f[n],
-         y = "# of Hexagons")+
-    facet_wrap(~Set, ncol = 3, scales = "free")+
-    theme(legend.position = "Bottom")
-  
-  # Save Plot
-  ggsave(here("Documentation/Plots_f/",paste0(var.list.f[n],".png")), plot = p, width = 7, height = 6,
-         dpi = 500)
-}
-
-```
-
-
-#### Numerical Predictors
+4. Selected hexagons within the cutoff are spatially aggregated into a multi-polygon, then exploded into individual polygons. The largest of the polygons is considered the primary sewershed area. Distance is then measured (edge-to-edge) between the primary polygon and the secondary polygons. Secondary polygons are considered spatial outliers if:
+
+- The area of a secondary polygon represents < 5% of the total sewershed area
+- The distance between the secondary polygon and the primary polygon is between 5 and 10 km and the total area of the secondary polygon is < 10% of the total sewershed area
+- The distance between the secondary polygon and the primary polygon is > 10 km and the area of the secondary polygon is < 30% of the total sewershed area.
+
+Once outliers were identified, they were removed from the sewershed. Any hexagons that were within an outlier polygon or beyond the population / probability cutoff were considered to still be available for larger sewersheds. Any hexagon that was determined to be part of the sewershed (not an outlier) was removed from consideration for larger sewersheds. Once final sewersheds were delineated, interior holes were filled to aid in visualization.
+
+### Validation
+Two validations were performed to evaluate the percent of agreement by area and the percent of the sewered population captured by the estimated sewersheds. Sewersheds were modeled for the endpoints within the testing dataset and compared with their utility sourced versions. To calculate area, a spatial intersection was performed and percent capture was calculated as the percent of the area of the modeled sewershed that was within the utility sourced sewershed, divided by the total area of the utility sourced sewershed. The percent of the sewered population captured was calculated as the cumulative sum of the population within hexagons assigned to an endpoint divided by the total residential population as reported in the CWNS.
+
+
+## Results
+In total, we started with 54,738 rows of data, which were queried down to a universe of 17,272 individual endpoints to be included in the modeling efforts. Of these endpoints, 276 were found to either have duplicated geo-locations with multiple CWNS IDs or were otherwise found to have insufficient data reported in the CWNS. Therefore, the final universe of endpoints used for sewershed delineation is 16,996.
+
+A total of 3,187 sewersheds were succesfully matched with their corresponding CWNS endpoints, leaving the model to estimate sewersheds for 13,809 endpoints.An application was built to enable multiple team members to perform validation of the matches (@fig-match)
+
+![A screenshot of a shiny application used by the research team to validate sewershed to CWNS endpoint matches.](img/App_1.png){#fig-match fig-alt="A screenshot of a shiny application used by the research team to validate sewershed to CWNS endpoint matches." fig-align="left" width=50%}
+
+
+### Model Tuning
+21 variables were identified as the most important features for the model (@fig-importance):
+
+- Euclidean Distance
+- Total Residential Population of the endpoint (CWNS)
+- Endpoint Near Rank
+- Population Served by Closer endpoints
+- Mean elevation of the 3-hexagon neighborhood
+- The difference between Euclidean and Manhatten distance
+- Mean Imperviousness
+- Name Match Score
+- Count of urban population between the hexagon and endpoint.
+- Count of Urban population within the 9-hexagon neighborhood
+- Elevation of the endpoint
+- Total population between the hexagon and the endpoint
+- % of the hexagon that was sewered in 1990
+- Median area of buildings within the hexagon
+- % of the 9-hexagon neighborhood that was sewered in 1990
+- Mean Area of buildings within the hexagon
+- Binary class of if a name match was found
+- Total number of buildings within the hexagon
+- The elevation difference between the endpoint and the hexagon
+- City / Place Match
+- The count of urban population within the 3-hexagon neighborhood
 
 ```{r}
-#| output: asis
-img_files <- fs::dir_ls("Plots", glob="*.png")
-cat("::: {layout-ncol=2}\n",
-    glue::glue("![]({img_files})\n\n\n"),
-    ":::",
-    sep = ""
-)
+#| label: fig-importance
+#| fig-cap: "Variable importance for the sewershed model."
+#| fig-align: "center"
+#| fig-alt: "A bar chart showing the variable importance for the sewershed model."
+#| fig-width: 6
+#| fig-height: 6
+#| fig-show: "hold"
+
+importance <- read.csv("D:/Github/Sewersheds/Model_Results/Importance.csv")
+
+ggplot(importance)+
+  geom_col(aes(x = Gain, y = reorder(Feature, Gain)), fill = "#34a6ba")+
+  labs(x = "Importance", y = "Feature")+
+  theme_minimal()+
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.x = element_text(size = 10),
+        axis.title.y = element_text(size = 10))
+```
+
+The results of the model tuning returned an optimal model using the gbtree method, a maximum tree depth of 7, a minimum child weight of 9.33, a sub sample of 0.994 and column sample by tree of 0.966. The overall accuracy of the final model was 90.65% with a sensitivity of 92.6% and a specificity of 88.9%.
+
+The probabilty cutoff was calculated from the final model predictions on the testing dataset. The optimal cutoff ranged from 0.11 for large sewersheds to 0.77 for small sewersheds (@fig-probabilities)
+
+![](img/probability.png){#fig-probabilities fig-alt="A bar chart showing the probability cutoff for each sewershed size." fig-align="left" width=50%}
+
+### Sewershed Validation
+Compared with the utility sources sewersheds, modeled sewersheds from the testing dataset had a median population capture of of 74.4% (@tbl-valid_pop).
+
+```{r tbl-valid_pop}
+#| label: tbl-valid_pop
+#| tbl-cap: "Percent of sewered population captured by modeled sewersheds compared with utility sourced sewersheds."
+#| tbl-align: "center"
+#| tbl-alt: "A table showing the percent of sewered population captured by modeled sewersheds compared with utility sourced sewersheds."
+#| tbl-width: 6
+#| tbl-height: 4
+#| tbl-show: "hold"
+
+valid.pop <- data.frame(Metric = c("Population","Area"),
+                        Q1 = c(50.98,38.93),
+                        Median = c(74.39,59.43),
+                        Q3 = c(90.23,77.63))
+
+gt(valid.pop)%>%
+  fmt_number(columns = c(Q1,Median,Q3), use_seps = TRUE, decimals = 2)%>%
+  cols_label(Metric = "Metric",
+             Q1 = "25th Percentile",
+             Median = "Median",
+             Q3 = "75th Percentile")%>%
+  tab_header(title = "Percent of Sewer Population Captured by Modeled Sewersheds")%>%
+  tab_spanner(label = "Sewershed Validation", columns = c(Q1,Median,Q3))%>%
+  cols_align(align = "center", columns = everything())
+
+
+```
+
+In total, the final dataset includes 16,961 sewersheds, meaning only 30 endpoints were not able to be modeled. The dataset can be accessed and viewed on the [EPA internal web application](https://epa.maps.arcgis.com/apps/instant/atlas/index.html?appid=5b098638234349dd8dca7f764e7aa4e3)
+
+
+
+# Appendices
+
+## Appendix I - Existing Sewershed Data
+
+### Sewered Population of Utility-Sourced Sewersheds by State
+
+```{r stateSewersheds}
+#| label: fig-stateSwrPop
+#| fig-cap: "The sewered population which is served by utility-sourced sewersheds by state."
+#| fig-align: "center"
+#| fig-alt: "The sewered population which is served by utility-sourced sewersheds by state."
+#| fig-width: 6
+#| fig-height: 4
+#| fig-show: "hold"
+
+utility.pop.counts <- read.csv("Data/Utility_Pop_Counts.csv")%>%
+  mutate(Pct = round(100*(Pop_U/Pop_T)))
+
+utility.pop.counts %>%
+  gt() %>%
+  fmt_number(columns = c(Pop_T,Pop_U),use_seps = TRUE,
+             decimals = 0)%>%
+  cols_label(Pct = "Percent of Total Population Served by Utility Sourced Sewersheds",
+             Pop_T = "Total Sewered Population",
+             Pop_U = "Sewered Population of Utility Sourced Sewersheds")%>%
+  gt_plt_bar(column = Pct, keep_column = FALSE, color = "#34a6ba")
 ```
 
 
-A review of the above plots indicates that the overall distributions are similar between the three datasets, indicating that our new 'balanced' dataset has resolved it's imbalanced class problem, while maintaining a representative distribution of the original training dataset and the testing dataset. Therefore we can continue with model training for these numerical predictors.
+### Sources of Utility Sourced Sewersheds
 
-#### Categorical Predictors
-```{r}
-#| output: asis
-img_files <- fs::dir_ls("Plots_f", glob="*.png")
-cat("::: {layout-ncol=2}\n",
-    glue::glue("![]({img_files})\n\n\n"),
-    ":::",
-    sep = ""
-)
+```{r stateSewersheds}
+#| label: fig-utilitySources
+#| fig-cap: "Sources for Utility Sourced Sewersheds."
+#| fig-align: "center"
+#| fig-alt: "A list of Sources for Utility Sourced Sewersheds."
+#| fig-width: 6
+#| fig-height: 4
+#| fig-show: "hold"
+
+utility.sources <- read.csv("Data/Utility_Sources.csv")%>%
+  select(State,Detail,Source)
+
+utility.sources%>%
+  gt() %>%
+  fmt_url(columns = Source,
+          rows = starts_with("https", vars = Source))
 ```
-
-### Sewershed Population Served
-Variable Label: 'TOTAL_RES_POPULATION_2022'
-
-
-     
-### Manhatten Distance
-Variable Label: 'distance'
-
-### Straight Distance
-
-### Squirrel Distance
-
-### Building Metrics
-
-#### Building Count
-Variable Label: 'nBldgs'
-
-#### Building Area
-Variable Labels: 'Med_Bldg_Area', 'Mean_Bldg_Area'
-
-#### Building Height
-Variable Labels: 'Med_Bldg_Height', 'Mean_Bldg_Height'
-
-### 1990 Housing Units
-Variable Label: 'HU_90'
-
-### 2020 Housing Units
-Variable Label: 'HU_20'
-
-### 1990 % Sewer
-Variable Label: 'Pct_Sewer_90'
-
-### 2020 Population
-Variable Label: 'Pop_2020'
-
-### Urban / Rural Census Classification
-Variable Label: 'Urban_Rural'
-
-### Land Cover
-Variable Label: 'NLCD_Class'
-!['Bins for NLCD classifications'](img/NLCD_Class.png)
-
-### Endpoint Elevation
-Variable Label: 'EP_Elevation'
-
-### Elevation Difference
-Variable Label: 'EP_Elev_Dif'
-
-### Impervious Surface
-Variable Label: 'Imprv_Med', 'Imprv_Mean'
-
-
-### Metrics to Describe Area Between Hexagon and Endpoint
-Variable Labels: 'Pop_B', 'THU_B', 'Urban_B', 'Bldgs_B'
-
-
-### Metrics to Describe the Area Surrounding each Hexagon
-
-#### Radius of 3
-Variable Labels: 'Pop_3', 'THU_3', 'Urban_Pop_3', 'OHU_90_3', 'Pub_W_90_3', 'Pub_S_90_3', 'nBldgs_3', 'NLCD_3', 'Imprv_Med_3', 'mean_Elev_3'
-
-#### Radius of 9
-Variable Labels: 'Pop_9', 'THU_9', 'Urban_Pop_9', 'OHU_90_9', 'Pub_W_90_9', 'Pub_S_90_9', 'nBldgs_9', 'NLCD_9', 'Imprv_Med_9', 'mean_Elev_9'
-
-
-
-
-
-## Model Tuning
-
-To determine the best model parameters, a grid search approach is used. This involves generating random parameter values within a range and using permutations of those combinations to train hundreds of models. We then evaluate the performance of the models to determine the best parameter combinations and start to identify variables of importance. The approach we used randomizes the number of trees between 10 and 1,010 (using intervals of 100) and mTry between 2 and 10. Each model includes the same base predictors, but also includes three additional predictors selected at random. Base predictors in every model include: 'TOTAL_RES_POPULATION_2022' 'Near_Rank', 'distance' 'nBldgs' 'HU_90' 'HU_20' 'Pct_Sewer_90' 'Urban_Rural' 'NLCD_Class' 'EP_Elevation' 'EP_Elev_Dif' and 'Imprv_Med'.
-
-```{r tuningResults, eval = FALSE}
-tune.files <- list.files(here("Data/Tuning"), full.names = TRUE)
-tune.df <- vroom(tune.files)%>%
-  distinct()
-
-add.vars <- tune.df%>%
-  select(Vars)%>%
-  separate(Vars, into = letters[1:16],sep = "\\+")%>%
-  mutate(Added = paste0(n,", ",o,", ",p))
-
-tune.df$Added <- add.vars$Added
-
-plot_ly(tune.df, x = ~mTry, y = ~Trees, z = ~TPR, color = ~Accuracy, colors = c("#440154FF", "#21908CFF", "#FDE725FF"), type = "scatter3d", mode = "markers",
-        text = ~paste0("Trees: ",Trees,"<br>",
-                       "mTry: ", mTry,"<br>",
-                       "TPR: ",round(100*(TPR),2),"%<br>",
-                       "Added Variables: ",Added),
-        hoverinfo = "text")%>%
-  layout(title = "Model Tuning Results",
-         scene = list(xaxis = list(title = "mTry"),
-                      yaxis = list(title = "nTrees"),
-                      zaxis = list(title = "True Positive %")))
-```
-
-
-
-### Accuracy Related to Additional Variables
-
-```{r tune4, eval = FALSE}
-# Create data frame of all variables that were added
-var.impact <- tune.df%>%
-  separate(Added, into = c("Add_1","Add_2","Add_3"), sep = ", ")
-  # pivot_longer(cols = c(Add_1,Add_2,Add_3), names_to = "Added_Position", values_to = "Added_Var")%>%
-  # select(!Vars)
-
-# Plot added var by TPR and color by trees
-plot_ly(var.impact)%>%
-  add_markers(x = ~Add_1, y = ~Add_2, z = ~Add_3, color = ~TPR,
-              text = ~paste0("Added Variables: ",Add_1," + ",Add_2," + ",Add_3,"<br>",
-                             "TPR: ",round(100*(TPR),2),"%<br>",
-                             "Trees: ",Trees,"<br>",
-                             "mTry: ",mTry,"<br>"),
-              hoverinfo = "text")%>%
-  layout(title = "Variables Added to Base Model",
-         yaxis = list(title = ""),
-         xaxis = list(title = ""),
-         zaxis = list(title = ""))
-```
-
-

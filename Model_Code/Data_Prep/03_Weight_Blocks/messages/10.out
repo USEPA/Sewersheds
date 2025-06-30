@@ -1,0 +1,29 @@
+[1] "Starting 10"
+[1] "Loading quadkey joins @ 2025-04-25 12:52:33"
+[1] "Loading download links @ 2025-04-25 12:52:44"
+Reading layer `DE_block_2020' from data source 
+  `/work/GRDVULN/census/DE_block_2020.shp' using driver `ESRI Shapefile'
+Simple feature collection with 19979 features and 18 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: 1704048 ymin: 294422.1 xmax: 1796572 ymax: 448387.8
+Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+[1] "Downloading Buildings from 5 Quadkeys --- 2025-04-25 12:52:59"
+[1] "(5) Files to be Downloaded"
+[1] "Loading Buildings @ 2025-04-25 12:53:01"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:14"
+[1] "Completed Quadkey #1 @ 2025-04-25 12:53:17"
+[1] "Loading Buildings @ 2025-04-25 12:53:19"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:23"
+[1] "Completed Quadkey #2 @ 2025-04-25 12:53:25"
+[1] "Loading Buildings @ 2025-04-25 12:53:27"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:32"
+[1] "Completed Quadkey #3 @ 2025-04-25 12:53:34"
+[1] "Loading Buildings @ 2025-04-25 12:53:35"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:39"
+[1] "Completed Quadkey #4 @ 2025-04-25 12:53:39"
+[1] "Loading Buildings @ 2025-04-25 12:53:42"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:46"
+[1] "Completed Quadkey #5 @ 2025-04-25 12:53:49"
+[1] "Calculating Weights @ 2025-04-25 12:53:49"
+[1] "SCRIPT COMPLETE @ 2025-04-25 12:53:50"

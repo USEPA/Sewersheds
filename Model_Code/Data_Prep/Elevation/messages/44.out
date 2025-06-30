@@ -1,0 +1,16 @@
+[1] "Starting: 44 @ 2025-05-01 12:49:09"
+[1] "Querying Elevation Data for 106,181 hexagons @ 2025-05-01 12:49:10"
+[1] "Downloading in 3 chunks of 50,000 (Max)"
+[1] "Failed to retrieve elevation for 98 hexagons ... Trying up to 10 more times..."
+[1] "Retrieved 98 additional hexagons after 1 additional tries ... 0 could not be retrieved."
+[1] 50000
+[1] 99999
+[1] "Completed Chunk #1 @ 2025-05-01 13:08:50"
+[1] "Failed to retrieve elevation for 2696 hexagons ... Trying up to 10 more times..."
+[1] "Retrieved 0 additional hexagons after 10 additional tries ... 2696 could not be retrieved."
+[1] 1e+05
+[1] 149999
+[1] "Completed Chunk #2 @ 2025-05-01 13:36:00"
+[1] 150000
+[1] 156181
+[1] "Completed Chunk #3 @ 2025-05-01 13:38:12"

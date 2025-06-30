@@ -1,0 +1,22 @@
+[1] "Starting Rhode Island"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 4 systems"
+[1] "Rhode Island is 25% complete."
+[1] "Completed Rhode Island @ 2025-05-14 10:37:17"
+[1] "Rhode Island is 50% complete."
+[1] "Completed Rhode Island @ 2025-05-14 10:37:20"
+[1] "Rhode Island is 75% complete."
+[1] "Completed Rhode Island @ 2025-05-14 10:37:21"
+[1] "Rhode Island is 100% complete."
+[1] "Completed Rhode Island @ 2025-05-14 10:37:23"
+Deleting layer `Pop' using driver `GPKG'
+Writing layer `Pop' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Pop_Delineated/FP_44.gpkg' using driver `GPKG'
+Writing 4 features with 10 fields and geometry type Unknown (any).
+[1] "SCRIPT COMPLETE @ 2025-05-14 10:37:24"

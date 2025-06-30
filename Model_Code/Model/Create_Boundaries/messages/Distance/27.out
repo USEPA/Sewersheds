@@ -1,0 +1,40 @@
+[1] "Script Start @ 2025-06-12 20:20:32"
+[1] "9 previously delineated systems for state: 27"
+integer(0)
+[1] "Assigning hexagons to 538 systems @ 2025-06-12 20:21:06"
+[1] "3.7% Complete @ 2025-06-12 20:21:21"
+[1] "7.4% Complete @ 2025-06-12 20:21:34"
+[1] "11.2% Complete @ 2025-06-12 20:21:46"
+[1] "14.9% Complete @ 2025-06-12 20:21:58"
+[1] "18.6% Complete @ 2025-06-12 20:22:11"
+[1] "22.3% Complete @ 2025-06-12 20:22:23"
+[1] "26% Complete @ 2025-06-12 20:22:34"
+[1] "29.7% Complete @ 2025-06-12 20:22:46"
+[1] "33.5% Complete @ 2025-06-12 20:22:57"
+[1] "37.2% Complete @ 2025-06-12 20:23:08"
+[1] "40.9% Complete @ 2025-06-12 20:23:19"
+[1] "48.3% Complete @ 2025-06-12 20:23:39"
+[1] "52% Complete @ 2025-06-12 20:23:49"
+[1] "55.8% Complete @ 2025-06-12 20:23:59"
+[1] "59.5% Complete @ 2025-06-12 20:24:09"
+[1] "63.2% Complete @ 2025-06-12 20:24:20"
+[1] "66.9% Complete @ 2025-06-12 20:24:30"
+[1] "70.6% Complete @ 2025-06-12 20:24:40"
+[1] "74.3% Complete @ 2025-06-12 20:24:50"
+[1] "78.1% Complete @ 2025-06-12 20:25:00"
+[1] "81.8% Complete @ 2025-06-12 20:25:11"
+[1] "85.5% Complete @ 2025-06-12 20:25:21"
+[1] "89.2% Complete @ 2025-06-12 20:25:31"
+[1] "92.9% Complete @ 2025-06-12 20:25:41"
+[1] "96.7% Complete @ 2025-06-12 20:25:52"
+[1] "Failed to find boundaries for 3 Systems"
+[1] "Saving outputs @ 2025-06-12 20:26:03"
+Deleting layer `sewersheds' using driver `GPKG'
+Writing layer `sewersheds' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Distance/Boundaries/FP_27.gpkg' using driver `GPKG'
+Writing 535 features with 6 fields and geometry type Unknown (any).
+Deleting layer `sewersheds' using driver `GPKG'
+Writing layer `sewersheds' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Distance/Boundaries_Clip/FP_27.gpkg' using driver `GPKG'
+Writing 535 features with 6 fields and geometry type Unknown (any).
+[1] "Script Complete @ 2025-06-12 20:26:04"

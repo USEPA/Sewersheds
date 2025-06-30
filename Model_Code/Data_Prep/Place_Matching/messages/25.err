@@ -1,0 +1,77 @@
+
+Due to MODULEPATH changes, the following have been reloaded:
+  1) netcdf/4.9.2     2) udunits/2.2.28
+
+The following have been reloaded with a version change:
+  1) R/4.3.0 => R/4.4.2             4) hdf5/1.10.8 => hdf5/1.14.5
+  2) gdal/3.6.4 => gdal/3.7.3       5) intel/21.4 => intel/24.2
+  3) geos/3.11.2 => geos/3.12.0     6) proj/9.2.0 => proj/9.3.0
+
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Linking to GEOS 3.12.0, GDAL 3.7.3, PROJ 9.3.0; sf_use_s2() is TRUE
+Rows: 47873 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: "\t"
+chr (2): h3_index, Place
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Rows: 195415 Columns: 2
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: "\t"
+chr (2): h3_index, SubCounty
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning message:
+In CPL_read_ogr(dsn, layer, query, as.character(options), quiet,  :
+  GDAL Message 1: /work/GRDVULN/sewershed/Data/US_county_2022.shp contains polygon(s) with rings with invalid winding order. Autocorrecting them, but that shapefile should be corrected using ogr2ogr for example.
+Rows: 30881 Columns: 14
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (10): CWNS_ID, LOCATION_TYPE, DATUM, ADDRESS, ADDRESS_2, CITY, STATE_COD...
+dbl  (3): FACILITY_ID, LATITUDE, LONGITUDE
+lgl  (1): TRIBAL_LAND
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Warning message:
+One or more parsing issues, call `problems()` on your data frame for details,
+e.g.:
+  dat <- vroom(...)
+  problems(dat) 
+Rows: 30881 Columns: 14
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (11): CWNS_ID, STATE_CODE, INFRASTRUCTURE_TYPE, FACILITY_NAME, DESCRIPTI...
+dbl  (1): FACILITY_ID
+lgl  (2): SEMS_ID, DATE_LAST_MODIFIED
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+Joining with `by = join_by(CWNS_ID)`
+Warning message:
+In left_join(., hex.county, by = "h3_index") :
+  Detected an unexpected many-to-many relationship between `x` and `y`.
+ℹ Row 3 of `x` matches multiple rows in `y`.
+ℹ Row 69546 of `y` matches multiple rows in `x`.
+ℹ If a many-to-many relationship is expected, set `relationship =
+  "many-to-many"` to silence this warning.
+Warning message:
+There were 113 warnings in `mutate()`.
+The first warning was:
+ℹ In argument: `Match_Score = min(...)`.
+ℹ In row 131.
+Caused by warning in `min()`:
+! no non-missing arguments to min; returning Inf
+ℹ Run `dplyr::last_dplyr_warnings()` to see the 112 remaining warnings. 

@@ -1,0 +1,20 @@
+[1] "Starting 11"
+[1] "Loading quadkey joins @ 2025-04-25 12:52:34"
+[1] "Loading download links @ 2025-04-25 12:52:45"
+Reading layer `DC_block_2020' from data source 
+  `/work/GRDVULN/census/DC_block_2020.shp' using driver `ESRI Shapefile'
+Simple feature collection with 5935 features and 18 fields
+Geometry type: POLYGON
+Dimension:     XY
+Bounding box:  xmin: 1610830 ymin: 308504.6 xmax: 1629412 ymax: 329396
+Projected CRS: USA_Contiguous_Albers_Equal_Area_Conic
+[1] "Downloading Buildings from 2 Quadkeys --- 2025-04-25 12:52:58"
+[1] "(2) Files to be Downloaded"
+[1] "Loading Buildings @ 2025-04-25 12:53:04"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:33"
+[1] "Completed Quadkey #1 @ 2025-04-25 12:53:35"
+[1] "Loading Buildings @ 2025-04-25 12:53:37"
+[1] "Intersecting Buildings & Blocks @ 2025-04-25 12:53:49"
+[1] "Completed Quadkey #2 @ 2025-04-25 12:53:49"
+[1] "Calculating Weights @ 2025-04-25 12:53:49"
+[1] "SCRIPT COMPLETE @ 2025-04-25 12:53:50"

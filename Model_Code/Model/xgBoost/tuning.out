@@ -1,0 +1,874 @@
+[1] "Preparing Data @ 2025-06-05 21:13:26"
+[1] "Running Boosted Trees with Default parameters @ 2025-06-05 21:13:33"
+[1]	train-logloss:0.502304+0.000199	test-logloss:0.502801+0.000543 
+Multiple eval metrics are present. Will use test_logloss for early stopping.
+Will train until test_logloss hasn't improved in 20 rounds.
+
+[11]	train-logloss:0.170421+0.000702	test-logloss:0.174455+0.002296 
+[21]	train-logloss:0.144686+0.000961	test-logloss:0.151038+0.002407 
+[31]	train-logloss:0.133381+0.001359	test-logloss:0.141618+0.002648 
+[41]	train-logloss:0.126206+0.001653	test-logloss:0.135908+0.002311 
+[51]	train-logloss:0.119198+0.001175	test-logloss:0.130810+0.002257 
+[61]	train-logloss:0.113263+0.001457	test-logloss:0.126502+0.002538 
+[71]	train-logloss:0.106992+0.001292	test-logloss:0.122158+0.001989 
+[81]	train-logloss:0.102222+0.001520	test-logloss:0.118871+0.001704 
+[91]	train-logloss:0.097346+0.001536	test-logloss:0.115508+0.002206 
+[101]	train-logloss:0.092766+0.000751	test-logloss:0.112631+0.002136 
+[111]	train-logloss:0.089283+0.000916	test-logloss:0.110327+0.001601 
+[121]	train-logloss:0.085674+0.000710	test-logloss:0.108037+0.001585 
+[131]	train-logloss:0.082703+0.000649	test-logloss:0.106368+0.001708 
+[141]	train-logloss:0.080434+0.000905	test-logloss:0.105193+0.001584 
+[151]	train-logloss:0.077784+0.000786	test-logloss:0.103724+0.001742 
+[161]	train-logloss:0.075304+0.000751	test-logloss:0.102515+0.001854 
+[171]	train-logloss:0.072822+0.000663	test-logloss:0.101214+0.001970 
+[181]	train-logloss:0.070691+0.000649	test-logloss:0.100209+0.002020 
+[191]	train-logloss:0.068637+0.000587	test-logloss:0.099242+0.001824 
+[201]	train-logloss:0.066458+0.000691	test-logloss:0.098229+0.002055 
+[211]	train-logloss:0.064506+0.000731	test-logloss:0.097367+0.002034 
+[221]	train-logloss:0.062588+0.000625	test-logloss:0.096632+0.001859 
+[231]	train-logloss:0.060699+0.000418	test-logloss:0.095804+0.001619 
+[241]	train-logloss:0.059247+0.000761	test-logloss:0.095190+0.001813 
+[251]	train-logloss:0.057538+0.000830	test-logloss:0.094541+0.001773 
+[261]	train-logloss:0.055952+0.000647	test-logloss:0.093718+0.001693 
+[271]	train-logloss:0.054531+0.000537	test-logloss:0.093261+0.001632 
+[281]	train-logloss:0.052979+0.000590	test-logloss:0.092779+0.001620 
+[291]	train-logloss:0.051621+0.000881	test-logloss:0.092312+0.001802 
+[301]	train-logloss:0.050271+0.000853	test-logloss:0.091741+0.001803 
+[311]	train-logloss:0.048843+0.000847	test-logloss:0.091292+0.001865 
+[321]	train-logloss:0.047487+0.000670	test-logloss:0.090856+0.001799 
+[331]	train-logloss:0.046150+0.000815	test-logloss:0.090461+0.001792 
+[341]	train-logloss:0.044959+0.000696	test-logloss:0.090082+0.001745 
+[351]	train-logloss:0.043815+0.000612	test-logloss:0.089740+0.001655 
+[361]	train-logloss:0.042670+0.000514	test-logloss:0.089371+0.001645 
+[371]	train-logloss:0.041507+0.000418	test-logloss:0.089022+0.001664 
+[381]	train-logloss:0.040479+0.000338	test-logloss:0.088792+0.001813 
+[391]	train-logloss:0.039520+0.000325	test-logloss:0.088610+0.001813 
+[401]	train-logloss:0.038488+0.000422	test-logloss:0.088345+0.001737 
+[411]	train-logloss:0.037526+0.000297	test-logloss:0.088172+0.001605 
+[421]	train-logloss:0.036534+0.000201	test-logloss:0.087769+0.001691 
+[431]	train-logloss:0.035599+0.000282	test-logloss:0.087542+0.001607 
+[441]	train-logloss:0.034752+0.000314	test-logloss:0.087373+0.001590 
+[451]	train-logloss:0.033885+0.000236	test-logloss:0.087214+0.001650 
+[461]	train-logloss:0.033047+0.000333	test-logloss:0.087014+0.001589 
+[471]	train-logloss:0.032307+0.000369	test-logloss:0.086834+0.001515 
+[481]	train-logloss:0.031636+0.000287	test-logloss:0.086731+0.001563 
+[491]	train-logloss:0.030890+0.000273	test-logloss:0.086579+0.001700 
+[501]	train-logloss:0.030160+0.000242	test-logloss:0.086413+0.001649 
+[511]	train-logloss:0.029394+0.000231	test-logloss:0.086278+0.001597 
+[521]	train-logloss:0.028643+0.000217	test-logloss:0.086092+0.001542 
+[531]	train-logloss:0.028027+0.000256	test-logloss:0.086026+0.001608 
+[541]	train-logloss:0.027382+0.000246	test-logloss:0.085962+0.001589 
+[551]	train-logloss:0.026774+0.000224	test-logloss:0.085838+0.001567 
+[561]	train-logloss:0.026191+0.000264	test-logloss:0.085856+0.001588 
+[571]	train-logloss:0.025658+0.000313	test-logloss:0.085768+0.001592 
+[581]	train-logloss:0.024999+0.000329	test-logloss:0.085654+0.001551 
+[591]	train-logloss:0.024457+0.000311	test-logloss:0.085664+0.001613 
+[601]	train-logloss:0.023931+0.000357	test-logloss:0.085669+0.001641 
+Stopping. Best iteration:
+[587]	train-logloss:0.024639+0.000295	test-logloss:0.085593+0.001600
+
+[1] "Completed @ 2025-06-05 21:22:03 Minimum error:"
+[1] 0.08559317
+[1] "Best iteration: 587"
+[1]	val-error:0.106460	train-error:0.079765 
+[11]	val-error:0.089945	train-error:0.059050 
+[21]	val-error:0.089465	train-error:0.051255 
+[31]	val-error:0.090575	train-error:0.047150 
+[41]	val-error:0.090870	train-error:0.044650 
+[51]	val-error:0.092970	train-error:0.041505 
+[61]	val-error:0.094825	train-error:0.039285 
+[71]	val-error:0.096155	train-error:0.037285 
+[81]	val-error:0.100400	train-error:0.035340 
+[91]	val-error:0.101295	train-error:0.033585 
+[101]	val-error:0.104025	train-error:0.031850 
+[111]	val-error:0.104645	train-error:0.030620 
+[121]	val-error:0.105610	train-error:0.029645 
+[131]	val-error:0.108490	train-error:0.028825 
+[141]	val-error:0.110140	train-error:0.027750 
+[151]	val-error:0.111530	train-error:0.026525 
+[161]	val-error:0.112980	train-error:0.025380 
+[171]	val-error:0.113775	train-error:0.024585 
+[181]	val-error:0.114085	train-error:0.024195 
+[191]	val-error:0.114850	train-error:0.023340 
+[201]	val-error:0.115460	train-error:0.022105 
+[211]	val-error:0.116005	train-error:0.020755 
+[221]	val-error:0.116160	train-error:0.020380 
+[231]	val-error:0.116765	train-error:0.019565 
+[241]	val-error:0.117090	train-error:0.018935 
+[251]	val-error:0.117065	train-error:0.018270 
+[261]	val-error:0.118630	train-error:0.017800 
+[271]	val-error:0.119455	train-error:0.017205 
+[281]	val-error:0.120530	train-error:0.016585 
+[291]	val-error:0.120685	train-error:0.016160 
+[301]	val-error:0.120420	train-error:0.015510 
+[311]	val-error:0.121040	train-error:0.015040 
+[321]	val-error:0.121425	train-error:0.014740 
+[331]	val-error:0.121870	train-error:0.014480 
+[341]	val-error:0.122890	train-error:0.014185 
+[351]	val-error:0.123090	train-error:0.013560 
+[361]	val-error:0.124330	train-error:0.012955 
+[371]	val-error:0.124605	train-error:0.012465 
+[381]	val-error:0.124855	train-error:0.012025 
+[391]	val-error:0.124805	train-error:0.011710 
+[401]	val-error:0.125180	train-error:0.011390 
+[411]	val-error:0.124905	train-error:0.011035 
+[421]	val-error:0.124915	train-error:0.010745 
+[431]	val-error:0.125185	train-error:0.010285 
+[441]	val-error:0.125425	train-error:0.009985 
+[451]	val-error:0.125680	train-error:0.009735 
+[461]	val-error:0.126390	train-error:0.009475 
+[471]	val-error:0.126080	train-error:0.009190 
+[481]	val-error:0.126470	train-error:0.008790 
+[491]	val-error:0.127000	train-error:0.008465 
+[501]	val-error:0.127420	train-error:0.008130 
+[511]	val-error:0.127585	train-error:0.007875 
+[521]	val-error:0.127750	train-error:0.007605 
+[531]	val-error:0.128390	train-error:0.007300 
+[541]	val-error:0.128180	train-error:0.007095 
+[551]	val-error:0.128300	train-error:0.006945 
+[561]	val-error:0.128175	train-error:0.006745 
+[571]	val-error:0.128075	train-error:0.006500 
+[581]	val-error:0.128000	train-error:0.006285 
+[587]	val-error:0.128005	train-error:0.006165 
+[1] "Confusion matrix for default parameters: 2025-06-05 21:24:10"
+Confusion Matrix and Statistics
+
+          Reference
+Prediction     0     1
+         0 95423  4577
+         1 21024 78976
+                                          
+               Accuracy : 0.872           
+                 95% CI : (0.8705, 0.8735)
+    No Information Rate : 0.5822          
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.744           
+                                          
+ Mcnemar's Test P-Value : < 2.2e-16       
+                                          
+            Sensitivity : 0.8195          
+            Specificity : 0.9452          
+         Pos Pred Value : 0.9542          
+         Neg Pred Value : 0.7898          
+             Prevalence : 0.5822          
+         Detection Rate : 0.4771          
+   Detection Prevalence : 0.5000          
+      Balanced Accuracy : 0.8823          
+                                          
+       'Positive' Class : 0               
+                                          
+[1] "Preparing to tune @ 2025-06-05 21:24:10"
+[1] "Tuning began @ 2025-06-05 21:24:34"
+acc.test.mean 
+     0.965855 
+[1] "Finished tuning parameters @ 2025-06-05 22:11:49"
+[1] "Findings: "
+Tune result:
+Op. pars: booster=gbtree; max_depth=7; min_child_weight=9.33; subsample=0.994; colsample_bytree=0.966
+acc.test.mean=0.9658550
+[1] "Evaluating against testing set 2025-06-05 22:11:49"
+[1]	train-error:0.072860 
+[2]	train-error:0.071580 
+[3]	train-error:0.069290 
+[4]	train-error:0.068330 
+[5]	train-error:0.067585 
+[6]	train-error:0.066485 
+[7]	train-error:0.065715 
+[8]	train-error:0.064755 
+[9]	train-error:0.063850 
+[10]	train-error:0.063390 
+[11]	train-error:0.062625 
+[12]	train-error:0.061530 
+[13]	train-error:0.061355 
+[14]	train-error:0.060530 
+[15]	train-error:0.060110 
+[16]	train-error:0.059715 
+[17]	train-error:0.058920 
+[18]	train-error:0.058315 
+[19]	train-error:0.057880 
+[20]	train-error:0.057245 
+[21]	train-error:0.056910 
+[22]	train-error:0.056480 
+[23]	train-error:0.056175 
+[24]	train-error:0.055815 
+[25]	train-error:0.055405 
+[26]	train-error:0.055055 
+[27]	train-error:0.054640 
+[28]	train-error:0.054335 
+[29]	train-error:0.053925 
+[30]	train-error:0.053790 
+[31]	train-error:0.053590 
+[32]	train-error:0.053445 
+[33]	train-error:0.053050 
+[34]	train-error:0.052725 
+[35]	train-error:0.052440 
+[36]	train-error:0.052160 
+[37]	train-error:0.051825 
+[38]	train-error:0.051615 
+[39]	train-error:0.051300 
+[40]	train-error:0.051225 
+[41]	train-error:0.051010 
+[42]	train-error:0.050810 
+[43]	train-error:0.050600 
+[44]	train-error:0.050385 
+[45]	train-error:0.050235 
+[46]	train-error:0.049795 
+[47]	train-error:0.049670 
+[48]	train-error:0.049565 
+[49]	train-error:0.049480 
+[50]	train-error:0.049305 
+[51]	train-error:0.049215 
+[52]	train-error:0.049010 
+[53]	train-error:0.048830 
+[54]	train-error:0.048695 
+[55]	train-error:0.048555 
+[56]	train-error:0.048390 
+[57]	train-error:0.048120 
+[58]	train-error:0.048010 
+[59]	train-error:0.047800 
+[60]	train-error:0.047570 
+[61]	train-error:0.047435 
+[62]	train-error:0.047115 
+[63]	train-error:0.046930 
+[64]	train-error:0.046875 
+[65]	train-error:0.046780 
+[66]	train-error:0.046765 
+[67]	train-error:0.046430 
+[68]	train-error:0.046420 
+[69]	train-error:0.046100 
+[70]	train-error:0.046085 
+[71]	train-error:0.045985 
+[72]	train-error:0.045875 
+[73]	train-error:0.045790 
+[74]	train-error:0.045755 
+[75]	train-error:0.045610 
+[76]	train-error:0.045385 
+[77]	train-error:0.045215 
+[78]	train-error:0.045240 
+[79]	train-error:0.045185 
+[80]	train-error:0.045040 
+[81]	train-error:0.044895 
+[82]	train-error:0.044825 
+[83]	train-error:0.044760 
+[84]	train-error:0.044600 
+[85]	train-error:0.044580 
+[86]	train-error:0.044605 
+[87]	train-error:0.044440 
+[88]	train-error:0.044330 
+[89]	train-error:0.044235 
+[90]	train-error:0.044130 
+[91]	train-error:0.043985 
+[92]	train-error:0.043945 
+[93]	train-error:0.043845 
+[94]	train-error:0.043655 
+[95]	train-error:0.043525 
+[96]	train-error:0.043440 
+[97]	train-error:0.043405 
+[98]	train-error:0.043345 
+[99]	train-error:0.043280 
+[100]	train-error:0.043130 
+[101]	train-error:0.043070 
+[102]	train-error:0.042965 
+[103]	train-error:0.042885 
+[104]	train-error:0.042880 
+[105]	train-error:0.042710 
+[106]	train-error:0.042665 
+[107]	train-error:0.042625 
+[108]	train-error:0.042470 
+[109]	train-error:0.042440 
+[110]	train-error:0.042345 
+[111]	train-error:0.042300 
+[112]	train-error:0.042255 
+[113]	train-error:0.042210 
+[114]	train-error:0.042120 
+[115]	train-error:0.042040 
+[116]	train-error:0.042025 
+[117]	train-error:0.041980 
+[118]	train-error:0.041930 
+[119]	train-error:0.041785 
+[120]	train-error:0.041750 
+[121]	train-error:0.041695 
+[122]	train-error:0.041700 
+[123]	train-error:0.041505 
+[124]	train-error:0.041315 
+[125]	train-error:0.041170 
+[126]	train-error:0.041095 
+[127]	train-error:0.041045 
+[128]	train-error:0.040935 
+[129]	train-error:0.040850 
+[130]	train-error:0.040730 
+[131]	train-error:0.040595 
+[132]	train-error:0.040530 
+[133]	train-error:0.040465 
+[134]	train-error:0.040420 
+[135]	train-error:0.040325 
+[136]	train-error:0.040200 
+[137]	train-error:0.040135 
+[138]	train-error:0.040095 
+[139]	train-error:0.040000 
+[140]	train-error:0.039885 
+[141]	train-error:0.039785 
+[142]	train-error:0.039760 
+[143]	train-error:0.039655 
+[144]	train-error:0.039520 
+[145]	train-error:0.039420 
+[146]	train-error:0.039355 
+[147]	train-error:0.039285 
+[148]	train-error:0.039250 
+[149]	train-error:0.039200 
+[150]	train-error:0.039150 
+[151]	train-error:0.039140 
+[152]	train-error:0.039085 
+[153]	train-error:0.038995 
+[154]	train-error:0.038805 
+[155]	train-error:0.038735 
+[156]	train-error:0.038710 
+[157]	train-error:0.038610 
+[158]	train-error:0.038550 
+[159]	train-error:0.038550 
+[160]	train-error:0.038460 
+[161]	train-error:0.038295 
+[162]	train-error:0.038245 
+[163]	train-error:0.038210 
+[164]	train-error:0.038165 
+[165]	train-error:0.038125 
+[166]	train-error:0.038085 
+[167]	train-error:0.037955 
+[168]	train-error:0.037845 
+[169]	train-error:0.037770 
+[170]	train-error:0.037685 
+[171]	train-error:0.037570 
+[172]	train-error:0.037505 
+[173]	train-error:0.037485 
+[174]	train-error:0.037400 
+[175]	train-error:0.037335 
+[176]	train-error:0.037190 
+[177]	train-error:0.037170 
+[178]	train-error:0.037055 
+[179]	train-error:0.037010 
+[180]	train-error:0.036925 
+[181]	train-error:0.036915 
+[182]	train-error:0.036855 
+[183]	train-error:0.036835 
+[184]	train-error:0.036815 
+[185]	train-error:0.036715 
+[186]	train-error:0.036620 
+[187]	train-error:0.036515 
+[188]	train-error:0.036440 
+[189]	train-error:0.036250 
+[190]	train-error:0.036140 
+[191]	train-error:0.036090 
+[192]	train-error:0.036005 
+[193]	train-error:0.035930 
+[194]	train-error:0.035905 
+[195]	train-error:0.035735 
+[196]	train-error:0.035650 
+[197]	train-error:0.035505 
+[198]	train-error:0.035415 
+[199]	train-error:0.035295 
+[200]	train-error:0.035305 
+[201]	train-error:0.035260 
+[202]	train-error:0.035170 
+[203]	train-error:0.035140 
+[204]	train-error:0.035125 
+[205]	train-error:0.035095 
+[206]	train-error:0.034945 
+[207]	train-error:0.034945 
+[208]	train-error:0.034950 
+[209]	train-error:0.034920 
+[210]	train-error:0.034920 
+[211]	train-error:0.034820 
+[212]	train-error:0.034770 
+[213]	train-error:0.034755 
+[214]	train-error:0.034665 
+[215]	train-error:0.034630 
+[216]	train-error:0.034585 
+[217]	train-error:0.034535 
+[218]	train-error:0.034465 
+[219]	train-error:0.034405 
+[220]	train-error:0.034380 
+[221]	train-error:0.034250 
+[222]	train-error:0.034245 
+[223]	train-error:0.034190 
+[224]	train-error:0.034170 
+[225]	train-error:0.034145 
+[226]	train-error:0.034130 
+[227]	train-error:0.034080 
+[228]	train-error:0.033995 
+[229]	train-error:0.033960 
+[230]	train-error:0.033865 
+[231]	train-error:0.033770 
+[232]	train-error:0.033660 
+[233]	train-error:0.033605 
+[234]	train-error:0.033555 
+[235]	train-error:0.033535 
+[236]	train-error:0.033490 
+[237]	train-error:0.033475 
+[238]	train-error:0.033455 
+[239]	train-error:0.033460 
+[240]	train-error:0.033425 
+[241]	train-error:0.033360 
+[242]	train-error:0.033315 
+[243]	train-error:0.033300 
+[244]	train-error:0.033245 
+[245]	train-error:0.033210 
+[246]	train-error:0.033130 
+[247]	train-error:0.033040 
+[248]	train-error:0.033005 
+[249]	train-error:0.032975 
+[250]	train-error:0.032915 
+[251]	train-error:0.032860 
+[252]	train-error:0.032825 
+[253]	train-error:0.032805 
+[254]	train-error:0.032755 
+[255]	train-error:0.032710 
+[256]	train-error:0.032690 
+[257]	train-error:0.032650 
+[258]	train-error:0.032600 
+[259]	train-error:0.032500 
+[260]	train-error:0.032500 
+[261]	train-error:0.032480 
+[262]	train-error:0.032430 
+[263]	train-error:0.032325 
+[264]	train-error:0.032330 
+[265]	train-error:0.032310 
+[266]	train-error:0.032290 
+[267]	train-error:0.032240 
+[268]	train-error:0.032175 
+[269]	train-error:0.032175 
+[270]	train-error:0.032030 
+[271]	train-error:0.032035 
+[272]	train-error:0.032000 
+[273]	train-error:0.031935 
+[274]	train-error:0.031890 
+[275]	train-error:0.031820 
+[276]	train-error:0.031730 
+[277]	train-error:0.031680 
+[278]	train-error:0.031650 
+[279]	train-error:0.031610 
+[280]	train-error:0.031585 
+[281]	train-error:0.031495 
+[282]	train-error:0.031445 
+[283]	train-error:0.031355 
+[284]	train-error:0.031330 
+[285]	train-error:0.031275 
+[286]	train-error:0.031230 
+[287]	train-error:0.031180 
+[288]	train-error:0.031170 
+[289]	train-error:0.031110 
+[290]	train-error:0.031040 
+[291]	train-error:0.031010 
+[292]	train-error:0.030970 
+[293]	train-error:0.030955 
+[294]	train-error:0.030915 
+[295]	train-error:0.030890 
+[296]	train-error:0.030790 
+[297]	train-error:0.030770 
+[298]	train-error:0.030715 
+[299]	train-error:0.030660 
+[300]	train-error:0.030635 
+[301]	train-error:0.030535 
+[302]	train-error:0.030530 
+[303]	train-error:0.030470 
+[304]	train-error:0.030455 
+[305]	train-error:0.030460 
+[306]	train-error:0.030405 
+[307]	train-error:0.030300 
+[308]	train-error:0.030275 
+[309]	train-error:0.030225 
+[310]	train-error:0.030240 
+[311]	train-error:0.030215 
+[312]	train-error:0.030190 
+[313]	train-error:0.030165 
+[314]	train-error:0.030205 
+[315]	train-error:0.030190 
+[316]	train-error:0.030155 
+[317]	train-error:0.030135 
+[318]	train-error:0.030100 
+[319]	train-error:0.030070 
+[320]	train-error:0.030090 
+[321]	train-error:0.029970 
+[322]	train-error:0.029930 
+[323]	train-error:0.029790 
+[324]	train-error:0.029735 
+[325]	train-error:0.029720 
+[326]	train-error:0.029660 
+[327]	train-error:0.029645 
+[328]	train-error:0.029645 
+[329]	train-error:0.029635 
+[330]	train-error:0.029590 
+[331]	train-error:0.029555 
+[332]	train-error:0.029505 
+[333]	train-error:0.029445 
+[334]	train-error:0.029445 
+[335]	train-error:0.029395 
+[336]	train-error:0.029380 
+[337]	train-error:0.029355 
+[338]	train-error:0.029335 
+[339]	train-error:0.029330 
+[340]	train-error:0.029260 
+[341]	train-error:0.029265 
+[342]	train-error:0.029260 
+[343]	train-error:0.029235 
+[344]	train-error:0.029175 
+[345]	train-error:0.029155 
+[346]	train-error:0.029065 
+[347]	train-error:0.029025 
+[348]	train-error:0.029055 
+[349]	train-error:0.028940 
+[350]	train-error:0.028845 
+[351]	train-error:0.028825 
+[352]	train-error:0.028765 
+[353]	train-error:0.028735 
+[354]	train-error:0.028730 
+[355]	train-error:0.028710 
+[356]	train-error:0.028695 
+[357]	train-error:0.028715 
+[358]	train-error:0.028610 
+[359]	train-error:0.028515 
+[360]	train-error:0.028475 
+[361]	train-error:0.028485 
+[362]	train-error:0.028390 
+[363]	train-error:0.028360 
+[364]	train-error:0.028360 
+[365]	train-error:0.028325 
+[366]	train-error:0.028240 
+[367]	train-error:0.028230 
+[368]	train-error:0.028210 
+[369]	train-error:0.028145 
+[370]	train-error:0.028125 
+[371]	train-error:0.028130 
+[372]	train-error:0.028035 
+[373]	train-error:0.028030 
+[374]	train-error:0.028015 
+[375]	train-error:0.028020 
+[376]	train-error:0.028005 
+[377]	train-error:0.028000 
+[378]	train-error:0.027985 
+[379]	train-error:0.027990 
+[380]	train-error:0.027955 
+[381]	train-error:0.027950 
+[382]	train-error:0.027890 
+[383]	train-error:0.027890 
+[384]	train-error:0.027875 
+[385]	train-error:0.027780 
+[386]	train-error:0.027790 
+[387]	train-error:0.027755 
+[388]	train-error:0.027725 
+[389]	train-error:0.027635 
+[390]	train-error:0.027640 
+[391]	train-error:0.027630 
+[392]	train-error:0.027540 
+[393]	train-error:0.027510 
+[394]	train-error:0.027495 
+[395]	train-error:0.027460 
+[396]	train-error:0.027450 
+[397]	train-error:0.027450 
+[398]	train-error:0.027460 
+[399]	train-error:0.027440 
+[400]	train-error:0.027435 
+[401]	train-error:0.027395 
+[402]	train-error:0.027370 
+[403]	train-error:0.027345 
+[404]	train-error:0.027325 
+[405]	train-error:0.027315 
+[406]	train-error:0.027255 
+[407]	train-error:0.027200 
+[408]	train-error:0.027180 
+[409]	train-error:0.027180 
+[410]	train-error:0.027090 
+[411]	train-error:0.027015 
+[412]	train-error:0.027015 
+[413]	train-error:0.027000 
+[414]	train-error:0.026990 
+[415]	train-error:0.026990 
+[416]	train-error:0.026960 
+[417]	train-error:0.026960 
+[418]	train-error:0.026950 
+[419]	train-error:0.026945 
+[420]	train-error:0.026910 
+[421]	train-error:0.026810 
+[422]	train-error:0.026785 
+[423]	train-error:0.026775 
+[424]	train-error:0.026745 
+[425]	train-error:0.026730 
+[426]	train-error:0.026675 
+[427]	train-error:0.026655 
+[428]	train-error:0.026585 
+[429]	train-error:0.026560 
+[430]	train-error:0.026540 
+[431]	train-error:0.026520 
+[432]	train-error:0.026520 
+[433]	train-error:0.026510 
+[434]	train-error:0.026495 
+[435]	train-error:0.026455 
+[436]	train-error:0.026430 
+[437]	train-error:0.026415 
+[438]	train-error:0.026410 
+[439]	train-error:0.026400 
+[440]	train-error:0.026390 
+[441]	train-error:0.026340 
+[442]	train-error:0.026305 
+[443]	train-error:0.026260 
+[444]	train-error:0.026190 
+[445]	train-error:0.026190 
+[446]	train-error:0.026185 
+[447]	train-error:0.026150 
+[448]	train-error:0.026140 
+[449]	train-error:0.026145 
+[450]	train-error:0.026135 
+[451]	train-error:0.026100 
+[452]	train-error:0.026065 
+[453]	train-error:0.026010 
+[454]	train-error:0.025935 
+[455]	train-error:0.025930 
+[456]	train-error:0.025870 
+[457]	train-error:0.025840 
+[458]	train-error:0.025835 
+[459]	train-error:0.025800 
+[460]	train-error:0.025765 
+[461]	train-error:0.025670 
+[462]	train-error:0.025660 
+[463]	train-error:0.025610 
+[464]	train-error:0.025570 
+[465]	train-error:0.025570 
+[466]	train-error:0.025510 
+[467]	train-error:0.025485 
+[468]	train-error:0.025485 
+[469]	train-error:0.025465 
+[470]	train-error:0.025440 
+[471]	train-error:0.025410 
+[472]	train-error:0.025400 
+[473]	train-error:0.025390 
+[474]	train-error:0.025240 
+[475]	train-error:0.025240 
+[476]	train-error:0.025190 
+[477]	train-error:0.025115 
+[478]	train-error:0.025090 
+[479]	train-error:0.025065 
+[480]	train-error:0.025035 
+[481]	train-error:0.025030 
+[482]	train-error:0.025030 
+[483]	train-error:0.025015 
+[484]	train-error:0.024985 
+[485]	train-error:0.024990 
+[486]	train-error:0.024990 
+[487]	train-error:0.024960 
+[488]	train-error:0.024930 
+[489]	train-error:0.024915 
+[490]	train-error:0.024890 
+[491]	train-error:0.024895 
+[492]	train-error:0.024860 
+[493]	train-error:0.024800 
+[494]	train-error:0.024760 
+[495]	train-error:0.024735 
+[496]	train-error:0.024725 
+[497]	train-error:0.024680 
+[498]	train-error:0.024640 
+[499]	train-error:0.024625 
+[500]	train-error:0.024640 
+[501]	train-error:0.024630 
+[502]	train-error:0.024560 
+[503]	train-error:0.024540 
+[504]	train-error:0.024540 
+[505]	train-error:0.024545 
+[506]	train-error:0.024535 
+[507]	train-error:0.024525 
+[508]	train-error:0.024515 
+[509]	train-error:0.024455 
+[510]	train-error:0.024425 
+[511]	train-error:0.024370 
+[512]	train-error:0.024365 
+[513]	train-error:0.024315 
+[514]	train-error:0.024295 
+[515]	train-error:0.024315 
+[516]	train-error:0.024295 
+[517]	train-error:0.024265 
+[518]	train-error:0.024240 
+[519]	train-error:0.024210 
+[520]	train-error:0.024200 
+[521]	train-error:0.024160 
+[522]	train-error:0.024140 
+[523]	train-error:0.024110 
+[524]	train-error:0.024095 
+[525]	train-error:0.024055 
+[526]	train-error:0.024030 
+[527]	train-error:0.024005 
+[528]	train-error:0.023975 
+[529]	train-error:0.023970 
+[530]	train-error:0.023970 
+[531]	train-error:0.023940 
+[532]	train-error:0.023935 
+[533]	train-error:0.023905 
+[534]	train-error:0.023820 
+[535]	train-error:0.023805 
+[536]	train-error:0.023775 
+[537]	train-error:0.023735 
+[538]	train-error:0.023725 
+[539]	train-error:0.023715 
+[540]	train-error:0.023710 
+[541]	train-error:0.023650 
+[542]	train-error:0.023645 
+[543]	train-error:0.023590 
+[544]	train-error:0.023605 
+[545]	train-error:0.023600 
+[546]	train-error:0.023585 
+[547]	train-error:0.023550 
+[548]	train-error:0.023545 
+[549]	train-error:0.023545 
+[550]	train-error:0.023550 
+[551]	train-error:0.023500 
+[552]	train-error:0.023510 
+[553]	train-error:0.023525 
+[554]	train-error:0.023480 
+[555]	train-error:0.023470 
+[556]	train-error:0.023410 
+[557]	train-error:0.023365 
+[558]	train-error:0.023360 
+[559]	train-error:0.023355 
+[560]	train-error:0.023330 
+[561]	train-error:0.023325 
+[562]	train-error:0.023320 
+[563]	train-error:0.023275 
+[564]	train-error:0.023245 
+[565]	train-error:0.023235 
+[566]	train-error:0.023230 
+[567]	train-error:0.023225 
+[568]	train-error:0.023230 
+[569]	train-error:0.023215 
+[570]	train-error:0.023150 
+[571]	train-error:0.023125 
+[572]	train-error:0.023130 
+[573]	train-error:0.023130 
+[574]	train-error:0.023105 
+[575]	train-error:0.023055 
+[576]	train-error:0.023055 
+[577]	train-error:0.023020 
+[578]	train-error:0.022950 
+[579]	train-error:0.022865 
+[580]	train-error:0.022850 
+[581]	train-error:0.022865 
+[582]	train-error:0.022860 
+[583]	train-error:0.022825 
+[584]	train-error:0.022815 
+[585]	train-error:0.022810 
+[586]	train-error:0.022785 
+[587]	train-error:0.022740 
+Confusion Matrix and Statistics
+
+          Reference
+Prediction     0     1
+         0 94710 15784
+         1  5290 84216
+                                         
+               Accuracy : 0.8946         
+                 95% CI : (0.8933, 0.896)
+    No Information Rate : 0.5            
+    P-Value [Acc > NIR] : < 2.2e-16      
+                                         
+                  Kappa : 0.7893         
+                                         
+ Mcnemar's Test P-Value : < 2.2e-16      
+                                         
+            Sensitivity : 0.9471         
+            Specificity : 0.8422         
+         Pos Pred Value : 0.8572         
+         Neg Pred Value : 0.9409         
+             Prevalence : 0.5000         
+         Detection Rate : 0.4736         
+   Detection Prevalence : 0.5525         
+      Balanced Accuracy : 0.8946         
+                                         
+       'Positive' Class : 0              
+                                         
+[1] "Summary of Probabilities:"
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.0000001 0.0005705 0.1842019 0.4294913 0.9491623 0.9999006 
+[1] "Saving Best Model --- 2025-06-05 22:14:16"
+[1] "Computing performance "
+[1] "Performance: "
+   Threshold Accuracy   Kappa Sensitivity Specificity
+1       0.10 0.906500 0.81300   0.9257882   0.8888836
+2       0.11 0.907000 0.81400   0.9234643   0.8917681
+3       0.12 0.907365 0.81473   0.9211405   0.8944621
+4       0.13 0.907625 0.81525   0.9190181   0.8968351
+5       0.14 0.907625 0.81525   0.9166539   0.8989791
+6       0.15 0.907650 0.81530   0.9144638   0.9010566
+7       0.16 0.907765 0.81553   0.9126717   0.9029736
+8       0.17 0.907735 0.81547   0.9107127   0.9048002
+9       0.18 0.907780 0.81556   0.9086381   0.9069255
+10      0.19 0.907630 0.81526   0.9065567   0.9087090
+11      0.20 0.907370 0.81474   0.9046427   0.9101343
+12      0.21 0.907080 0.81416   0.9026349   0.9116243
+13      0.22 0.906975 0.81395   0.9009250   0.9132103
+14      0.23 0.906690 0.81338   0.8991226   0.9145499
+15      0.24 0.906520 0.81304   0.8974269   0.9160390
+16      0.25 0.906165 0.81233   0.8956988   0.9171999
+17      0.26 0.905765 0.81153   0.8939887   0.9182670
+18      0.27 0.905360 0.81072   0.8922206   0.9194102
+19      0.28 0.905100 0.81020   0.8906536   0.9206559
+20      0.29 0.904730 0.80946   0.8890438   0.9217343
+21      0.30 0.904420 0.80884   0.8875240   0.9228565
+22      0.31 0.904150 0.80830   0.8861183   0.9239484
+23      0.32 0.903745 0.80749   0.8845667   0.9249366
+24      0.33 0.903405 0.80681   0.8831189   0.9259596
+25      0.34 0.902990 0.80598   0.8815904   0.9269324
+26      0.35 0.902610 0.80522   0.8800789   0.9279807
+27      0.36 0.902215 0.80443   0.8785090   0.9290888
+28      0.37 0.901745 0.80349   0.8770377   0.9299175
+29      0.38 0.901430 0.80286   0.8756949   0.9309501
+30      0.39 0.900920 0.80184   0.8741810   0.9317746
+31      0.40 0.900445 0.80089   0.8727879   0.9325348
+32      0.41 0.899955 0.79991   0.8712189   0.9335133
+33      0.42 0.899340 0.79868   0.8696566   0.9342068
+34      0.43 0.898755 0.79751   0.8680351   0.9350703
+35      0.44 0.898340 0.79668   0.8667010   0.9359541
+36      0.45 0.897655 0.79531   0.8650723   0.9366237
+37      0.46 0.897115 0.79423   0.8635885   0.9374525
+38      0.47 0.896570 0.79314   0.8620652   0.9383442
+39      0.48 0.895845 0.79169   0.8603078   0.9391593
+40      0.49 0.895270 0.79054   0.8586907   0.9401572
+41      0.50 0.894630 0.78926   0.8571506   0.9408978
+42      0.51 0.893825 0.78765   0.8553768   0.9416019
+43      0.52 0.892980 0.78596   0.8534883   0.9424055
+44      0.53 0.892130 0.78426   0.8516924   0.9430747
+45      0.54 0.891335 0.78267   0.8498905   0.9439170
+46      0.55 0.890185 0.78037   0.8476067   0.9446502
+47      0.56 0.889175 0.77835   0.8455801   0.9453568
+48      0.57 0.888100 0.77620   0.8434331   0.9461227
+49      0.58 0.887040 0.77408   0.8413954   0.9467736
+50      0.59 0.885815 0.77163   0.8391691   0.9473373
+51      0.60 0.884720 0.76944   0.8369653   0.9482453
+52      0.61 0.883385 0.76677   0.8345215   0.9489654
+53      0.62 0.882135 0.76427   0.8321844   0.9497664
+54      0.63 0.880815 0.76163   0.8298156   0.9504714
+55      0.64 0.879480 0.75896   0.8273355   0.9513857
+56      0.65 0.877945 0.75589   0.8247369   0.9520062
+57      0.66 0.876455 0.75291   0.8220950   0.9528891
+58      0.67 0.874825 0.74965   0.8193724   0.9535801
+59      0.68 0.873045 0.74609   0.8164268   0.9543401
+60      0.69 0.871355 0.74271   0.8136153   0.9551533
+61      0.70 0.869625 0.73925   0.8107685   0.9559838
+62      0.71 0.867480 0.73496   0.8074323   0.9566784
+63      0.72 0.865475 0.73095   0.8043317   0.9573640
+64      0.73 0.863395 0.72679   0.8010704   0.9582592
+65      0.74 0.861075 0.72215   0.7975411   0.9591084
+66      0.75 0.858890 0.71778   0.7941770   0.9601036
+67      0.76 0.856550 0.71310   0.7908333   0.9606351
+68      0.77 0.853765 0.70753   0.7868652   0.9613584
+69      0.78 0.851040 0.70208   0.7829507   0.9622840
+70      0.79 0.848230 0.69646   0.7789187   0.9633799
+71      0.80 0.844930 0.68986   0.7743506   0.9644021
+72      0.81 0.841485 0.68297   0.7696864   0.9653842
+73      0.82 0.838065 0.67613   0.7651428   0.9663158
+74      0.83 0.834460 0.66892   0.7603774   0.9674624
+75      0.84 0.830215 0.66043   0.7549746   0.9684499
+76      0.85 0.825920 0.65184   0.7495788   0.9695442
+77      0.86 0.821130 0.64226   0.7437530   0.9704788
+78      0.87 0.815875 0.63175   0.7374232   0.9717580
+79      0.88 0.809730 0.61946   0.7303442   0.9726105
+80      0.89 0.803235 0.60647   0.7230538   0.9734126
+81      0.90 0.795755 0.59151   0.7148243   0.9745215
+[1] "Saving Performance --- 2025-06-05 22:14:25"
+[1] "Script Complete @ 2025-06-05 22:14:25"

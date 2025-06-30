@@ -1,0 +1,25 @@
+Warning message:
+package ‘h3’ was built under R version 4.4.0 
+Linking to GEOS 3.11.2, GDAL 3.6.4, PROJ 9.2.0; sf_use_s2() is TRUE
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+Rows: 17271 Columns: 5
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr (3): STATE_CODE, CWNS_ID, FACILITY_N
+dbl (2): X, Y
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.

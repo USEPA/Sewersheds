@@ -1,0 +1,48 @@
+[1] "Starting Maryland"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 17 systems"
+[1] "Maryland is 5.9% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:37"
+[1] "Maryland is 11.8% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 17.6% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 23.5% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 29.4% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 35.3% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 41.2% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 47.1% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 52.9% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 58.8% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 64.7% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 70.6% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 76.5% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:38"
+[1] "Maryland is 82.4% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:39"
+[1] "Maryland is 88.2% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:39"
+[1] "Maryland is 94.1% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:39"
+[1] "Maryland is 100% complete."
+[1] "Completed Maryland @ 2025-05-14 10:38:39"
+Deleting layer `Pop' using driver `GPKG'
+Writing layer `Pop' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Pop_Delineated/FP_24.gpkg' using driver `GPKG'
+Writing 17 features with 10 fields and geometry type Unknown (any).
+[1] "SCRIPT COMPLETE @ 2025-05-14 10:38:40"

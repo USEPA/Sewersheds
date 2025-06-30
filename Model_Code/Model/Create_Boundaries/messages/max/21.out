@@ -1,0 +1,11 @@
+[1] "Script Start @ 2025-06-18 09:52:59"
+[1] "228 previously delineated systems for state: 21"
+[1] "Assigning hexagons to 35 systems @ 2025-06-18 09:53:36"
+[1] "57.1% Complete @ 2025-06-18 09:53:42"
+[1] "Failed to find boundaries for 0 Systems"
+[1] "Saving outputs @ 2025-06-18 09:53:54"
+Deleting layer `sewersheds' using driver `GPKG'
+Writing layer `sewersheds' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Max_Prob/Boundaries/FP_21.gpkg' using driver `GPKG'
+Writing 35 features with 6 fields and geometry type Unknown (any).
+[1] "Script Complete @ 2025-06-18 09:53:56"

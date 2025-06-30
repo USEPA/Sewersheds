@@ -1,0 +1,34 @@
+[1] "Starting Delaware"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 10 systems"
+[1] "Delaware is 10% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 20% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 30% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 40% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 50% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 60% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:18"
+[1] "Delaware is 70% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:19"
+[1] "Delaware is 80% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:19"
+[1] "Delaware is 90% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:19"
+[1] "Delaware is 100% complete."
+[1] "Completed Delaware @ 2025-05-14 10:35:20"
+Deleting layer `Pop' using driver `GPKG'
+Writing layer `Pop' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Pop_Delineated/FP_10.gpkg' using driver `GPKG'
+Writing 10 features with 10 fields and geometry type Unknown (any).
+[1] "SCRIPT COMPLETE @ 2025-05-14 10:35:23"

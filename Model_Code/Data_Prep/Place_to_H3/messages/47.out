@@ -1,0 +1,14 @@
+[1] "Loading places @ 2025-02-24 12:15:45"
+Reading layer `cb_2021_us_place_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 32188 features and 12 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -176.6967 ymin: -14.37374 xmax: 174.1553 ymax: 71.33971
+Geodetic CRS:  NAD83
+[1] "Finding Hexagons for 504 places @ 2025-02-24 12:15:46"
+[1] "19.8% Complete @ 2025-02-24 12:15:52"
+[1] "39.7% Complete @ 2025-02-24 12:15:56"
+[1] "59.5% Complete @ 2025-02-24 12:16:01"
+[1] "79.4% Complete @ 2025-02-24 12:16:05"
+[1] "99.2% Complete @ 2025-02-24 12:16:10"

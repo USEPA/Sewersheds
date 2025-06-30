@@ -1,0 +1,40 @@
+[1] "Starting New York"
+[1] "Ignoring hexagons already assigned to 594 Systems"
+Reading layer `cb_2021_us_state_500k' from data source 
+  `/work/GRDVULN/data/cb_2021_us_all_500k.gdb' using driver `OpenFileGDB'
+Simple feature collection with 56 features and 9 fields
+Geometry type: MULTIPOLYGON
+Dimension:     XY
+Bounding box:  xmin: -179.1489 ymin: -14.5487 xmax: 179.7785 ymax: 71.36516
+Geodetic CRS:  NAD83
+[1] "Building 24 systems"
+[1] "New York is 4.2% complete."
+[1] "New York is 8.3% complete."
+[1] "New York is 12.5% complete."
+[1] "New York is 16.7% complete."
+[1] "New York is 20.8% complete."
+[1] "New York is 25% complete."
+[1] "New York is 29.2% complete."
+[1] "New York is 33.3% complete."
+[1] "New York is 37.5% complete."
+[1] "New York is 41.7% complete."
+[1] "New York is 45.8% complete."
+[1] "New York is 50% complete."
+[1] "New York is 54.2% complete."
+[1] "New York is 58.3% complete."
+[1] "New York is 62.5% complete."
+[1] "New York is 66.7% complete."
+[1] "New York is 70.8% complete."
+[1] "New York is 75% complete."
+[1] "New York is 79.2% complete."
+[1] "New York is 83.3% complete."
+[1] "New York is 87.5% complete."
+[1] "New York is 91.7% complete."
+[1] "New York is 95.8% complete."
+[1] "New York is 100% complete."
+[1] "Completed New York @ 2025-05-27 09:52:06"
+Deleting layer `weighted' using driver `GPKG'
+Writing layer `weighted' to data source 
+  `/work/GRDVULN/sewershed/Model/Create_Boundaries/outputs/Weighted/FP_36.gpkg' using driver `GPKG'
+Writing 24 features with 10 fields and geometry type Unknown (any).
+[1] "SCRIPT COMPLETE @ 2025-05-27 09:52:07"
