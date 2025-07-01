@@ -1,17 +1,11 @@
 ---
 title: "U.S. EPA National Sewershed Dataset & Model Documentation"
 format:
-  html:
-    toc: true
-    toc-location: left
-    toc-depth: 3
-    toc-expand: true
-    code-fold: true
-    code-summary: 'Show Code'
-    page-layout: full
   pdf:
+    documentclass: scrartcl
     toc: true
     toc-depth: 3
+    toc-title: Contents
     number-sections: true
 ---
 
@@ -35,7 +29,7 @@ utility.df <- vroom("D:/Github/Sewersheds/Data/Utilities_06232025.csv")%>%
 This document serves as background material for the EPA National Sewershed Dataset. The dataset can be accessed via the [EPA internal web application](https://epa.maps.arcgis.com/apps/instant/atlas/index.html?appid=5b098638234349dd8dca7f764e7aa4e3)
 
 
-## Executive Summary
+# Executive Summary
 
 >"The [Clean Watershed Needs Survey(CWNS)](https://www.epa.gov/cwns/clean-watersheds-needs-survey-cwns-2022-report-and-data)provides an assessment of the capital investments necessary for states, the District of Columbia, and U.S. Territories to meet the Clean Water Act’s (CWA) water quality goals over the subsequent 20 years. These needs include projects and related infrastructure costs for wastewater publicly owned treatment works, stormwater treatment, nonpoint source control, and decentralized wastewater treatment.
 The U.S. Environmental Protection Agency (EPA) has prepared the 2022 CWNS Report to Congress in compliance with CWA section 516(b)(1)(B) (33 U.S Code §1375) as well as CWA section 609, which was added by the Infrastructure Investment and Jobs Act (IIJA), P.L. 117-58, November 15, 2021. This Report summarizes the results of EPA’s 17th survey since the CWA was enacted in 1972."
@@ -46,7 +40,7 @@ Sewershed extents are not a part of reporting within the CWNS and are otherwise 
 
 EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^
 
-## Introduction
+# Introduction
 
 Prior modeling similar to sewershed was conducted by EPA in 2024 for the service areas of community water systems. While there are many similarities between public water and wastewater infrastructure, there are several key differences. For example, there are more than twice as many community water systems in the United States as there are publicly owned treatment works (POTWs). In general, sewer systems represent a larger investment in infrastructure than public water service. Water, for example, is pressurized throughout the system and can more easily overcome changes in topography, whereas sewer largely relies on gravity for wastewater flow. Where gravity must be overcome within wastewater systems, pumping or elevator stations must be installed. Sewer lines are also larger than water supply lines and come with increased construction costs. It is not uncommon for a suburban or rural home to have a public water connection for supply and a septic system for discharge of wastewater. However, having access to a sewer and no access to public water occurs far more infrequently. This suggests that sewer systems are more frequently located in more urbanized areas.
 
@@ -54,7 +48,7 @@ The previous model for community water systems utilized census blocks, supplemen
 
 This document provides detail on how public data was collected, how the model was developed and discusses the resulting national dataset of sewersheds and how it can be used to support EPA's mission.
 
-## Definitions
+# Definitions
 | Term | Definition |
 |------|------------|
 | CWNS | Clean Watershed Needs Survey |
@@ -65,13 +59,13 @@ This document provides detail on how public data was collected, how the model wa
 
 
 
-## Existing Sewershed Data
+# Existing Sewershed Data
 
 The goal of this project was to publish a comprehensive dataset of sewershed boundaries in the United States that can be linked to the CWNS. To that end, we sought to include as many publicly available sewershed areas as possible. Ideally, every boundary would be sourced from the utility level to represent the most accurate representation of sewersheds possible. However, this data does not always exist, which necessitates the creation of modeling approaches to fill in the gaps.
 
 EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 3,280 sewersheds from public sources which could be linked to the CWNS (@tbl-stateSwr).
 
-```{r stateSewersheds}
+```{r stateSewersheds, eval = FALSE}
 #| label: tbl-stateSwr
 #| tbl-cap: "The total number of publicly available sewershed areas obtained by EPA for inclusion in the final dataset and for consideration in model training and testing."
 #| tbl-align: "center"
@@ -97,18 +91,19 @@ utility.st <- utility.df%>%
          Pop_Pct = round(100*(Pop/Pop_T)))%>%
   select(state_name,Pop,nSystems,Pct,Pop_Pct)
 
-#ut.st.tbl <- 
-utility.st %>%
+ut.st.tbl <- utility.st %>%
   gt() %>%
   fmt_number(columns = c(Pop,nSystems),use_seps = TRUE,
              decimals = 0)%>%
   cols_label(state_name = "State",
-             Pop = "Sewered Population of Utility Sourced Sewersheds",
-             nSystems = "Count of Utility Sourced Sewersheds",
+             Pop = "Sewered Population of sourced Sewersheds",
+             nSystems = "Count of sourced Sewersheds",
              Pct = "% of State Sewersheds",
-             Pop_Pct = "% of Sewered Population Served by Utility Sourced Sewersheds")%>%
-  gt_plt_bar_pct(column = Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE)%>%
-  gt_plt_bar_pct(column = Pop_Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE)%>%
+             Pop_Pct = "% of Sewered Population Served by sourced Sewersheds")%>%
+  gt_plt_bar_pct(column = Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE,
+                 label_cutoff = 0.5)%>%
+  gt_plt_bar_pct(column = Pop_Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE,
+                 label_cutoff = 0.5)%>%
   cols_width(state_name ~ px(100),
               Pop ~ px(100),
               nSystems ~ px(100),
@@ -119,16 +114,16 @@ utility.st %>%
     columns = c(Pop,nSystems)
   )
 
-# gtsave(ut.st.tbl, filename = "Utility_Sourced_Sewersheds_by_State.png",
-#        path = "D:/Github/Sewersheds/Documentation/img")
+gtsave(ut.st.tbl, filename = "Utility_Sourced_Sewersheds_by_State.png",
+       path = "D:/Github/Sewersheds/Documentation/img")
 ```
+![sourced Sewersheds by State](img/Utility_Sourced_Sewersheds_by_State.png){#fig-utilitySewersheds fig-alt="A table showing the count of sourced sewersheds by state." fig-align="left" width=50%}
 
-
-## Methods
+# Methods
 
 Three types of tree-based models were considered for this project: a decision tree, a random forest and boosted trees. All three have advantages and disadvantages that must be considered. A single decision tree is the simplest and most easy to interpret method, but can be overly simplistic and less accurate than more complex models. A random forest is a collection of decision trees with randomized input variables, which can improve accuracy and protect from over-fitting but is less interpretable and requires more computational power. Boosted trees are a more advanced method that build decisions trees in succession. Each new decision tree attempts to solve for error found in the previous tree. This can lead to even better accuracy, but at the cost of increased complexity and reduced interpretability. Boosted trees are especially effective at leveraging variables that may otherwise reflect lower importance levels in other methods. We found that the higher accuracy returned by boosted tree models justified its selection over the other two methods. For brevity, only the boosted tree model is discussed in detail.
 
-### Defining the Universe of Sewersheds
+## Defining the Universe of Sewersheds
 
 Not all records within the CWNS represent endpoints for wastewater collection. The first step in our modeling effort is to establish the universe of systems. To do this, we use the following criteria to select endpoints:
 
@@ -247,8 +242,8 @@ st_write(sf, here("Data/endpoints.gpkg"), layer = "Endpoints_LT50PCT_Q", append 
 
 ```
 
-### Matching Utility Sourced Boundaries to CWNS Locations
-Utility sourced sewersheds had to be matched with their corresponding CWNS endpoint locations as there is no common identifier between the two datasets. Matching was done through a combination of spatial intersections, distance measurements, text similarity between names and individual visual inspection.
+## Matching sourced Boundaries to CWNS Locations
+sourced sewersheds had to be matched with their corresponding CWNS endpoint locations as there is no common identifier between the two datasets. Matching was done through a combination of spatial intersections, distance measurements, text similarity between names and individual visual inspection.
 
 
 ```{r cwnsJoin, eval=FALSE}
@@ -376,20 +371,20 @@ vroom_write(df.sm,here("Data/Validation/M_Scores.csv"), delim = ",")
 
 
 
-### Spatial Resolution
+## Spatial Resolution
 
 Hexagons were chosen as the spatial unit for the model for several reasons. Hexagons are roughly the same size across the United States, they allow for more consistent statistical calculations related to area and distance and density values do not need to be calculated. Hexagons also allow for more complex network calculations at higher computation rates because distance can be inferred as a constant between each neighboring pair of hexagons. Finally, hexagons offer an advantage to census blocks, which are delineated based on physical boundaries such as roads and rivers, which can include undeveloped areas, especially in rural settings. Using hexagons allows us to create more detailed sewersheds while reducing overall computation requirements. For this modeling effort, level 9 hexagons were used, which are ~0.11 km^2 in area.
 
 ![A satelite image of Piedmont, MO illustrating hexagons with buildings, overlaid by census block boundaries.](img/Hex_Example.png){#fig-hex fig-alt="A map of a rural town showing that hexagons improve the detail of developed area relative to census blocks." fig-align="left" width=50%}
 
-### Model Development
+## Model Development
 The goal of the model is to predict whether a hexagon is sewered by a specific endpoint. Essentially the model is answering two questions. **1.** Is the hexagon connected to sewer? and **2.** If so, which endpoint is the most likely to serve that hexagon? The model is therefore a binary classification model, which returns a probability that a hexagon is part of the sewershed for a given endpoint location. The model considers each row of a table as a unique pairing between a specific hexagon and a specific endpoint. Additional data within each row are the 'features' which are predictor variables relating to physical, environmental and demographic variables unique to that pairing.
 
-#### Defining Area of Consideration
-To minimize computation time and increase efficiency, utility sourced sewersheds were used to test the maximum distance between an endpoint and the furthest possible hexagon that is served by that endpoint. 
+### Defining Area of Consideration
+To minimize computation time and increase efficiency, sourced sewersheds were used to test the maximum distance between an endpoint and the furthest possible hexagon that is served by that endpoint. 
 
 
-#### Feature Engineering
+### Feature Engineering
 In machine learning, 'features' refer to the input data that will act as predictors for the model. 'Feature engineering' therefore refers to the methods we use to prepare the data so that it contributes to a successful model. The primary source for the sewershed model is the CWNS, which includes the locations of treatment plants that are considered 'endpoints', meaning that it is the final stop for wastewater before being discharged back into the environment. The sewershed is therefore the entire contributing area that discharges wastewater to each endpoint.
 
 Sewered areas are typically developed, have relatively dense populations and are close to a treatment plant. Information fed into the model must provide relevant tools for relationships to be determined. For example, sewer systems, unlike public water systems, are generally not pressurized, meaning that elevation may be a factor. The distance between a hexagon and a treatment plant may vary depending on how many people the treatment plant serves. A hexagon with no population, but with several large buildings and very little green space may indicate an industrial zone.
@@ -398,17 +393,17 @@ The following features were created and tested for inclusion in the model:
 
 The random forest model requires several input datasets, which will provide contextual information to help it determine of an area is served by a public wastewater collection system, and which collection system it is served by. These data must be prepared to conform to our output geospatial data, which are level 9 H3 hexagons. The hexagons are roughly 0.1 km<sup>2</sup> in area. Here, we describe each input dataset and how it was developed to conform to the hexagon grid.
 
-##### 1990 Census Data
+#### 1990 Census Data
 
 Data included from the 1990 census includes total population and housing units (1990 Census: STF 1 - 100% Data); estimated number of housing units on public sewer and estimated number housing units on public water (1990 Census: STF 3 - Sample-Based Data).
 
 1990 Census data was cross-walked to 2020 boundaries using the cascade weighting method described in Murray & Hall (2024) and the block-to-block crosswalks published by the [IPUMS](https://www.nhgis.org/geographic-crosswalks#from-blocks). Once cross-walked, the data was included with the 2020 Census data described in the next step.
 
 
-#####  2020 Census Data
+####  2020 Census Data
 2020 Census data included 100% counts at the census block level for population, housing units and count of urban/rural population. To convert census blocks into hexagons, a building weighted calculation was performed. Microsoft building footprints larger than 40 square meters (about the size of a detached 2-car garage) were intersected with both hexagons and census blocks. The percent of buildings within each block were calculated for each hexagon and used to weight census data into hexagon parts. Hexagon parts, which were subdivided by census blocks were then re-aggregated to complete hexagons using the H3 Index for each. This yields estimated Census counts at the hexagon level.
 
-#####  Building Footprints
+####  Building Footprints
 When the previous step of weighting census data was performed and buildings were intersected with hexagons, a table was saved that included one row for every building, along with its associated hexagon, total area in km<sup>2</sup> and its height as estimated by [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints). Further predictive variables were derived from these data including:
 
 - Mean building area
@@ -420,14 +415,14 @@ When the previous step of weighting census data was performed and buildings were
 
 For buildings where height was not available, we applied a value of 4.5 meters, which is roughly the height of a one-story building with a roof.
 
-#####  Land Cover / Land Use
+####  Land Cover / Land Use
 The National Land Cover Database was used to derive characteristics for each hexagon. Data was obtained in raster format from [MRLC](https://www.mrlc.gov/) and pixels were extracted to each hexagon. We determined the mode (maximum frequency) of each land cover type within each hexagon. Land cover classes that are not part of the four developed classes were binned into either 'water' or 'rural/other' (@fig-NLCD)
 
 !['Bins for NLCD classifications'](img/NLCD_Class.png){#fig-NLCD fig-alt="A table showing the classification of NLCD land cover types into bins for use in the sewershed model." fig-align="left" width=50%}
  
 We also derived impervious surface using the median and mean impervious surface percentage within each hexagon.
  
-#####  Road Networks
+####  Road Networks
 Variables for roads were derived from the [OSM](https://www.openstreetmap.org/) dataset. For each hexagon, we extracted OSM 'highways' which include the following classifications:
 
 - motorway
@@ -442,29 +437,29 @@ For detailed information on what each class represents, please see [OSM key:high
 
 We calculated the total road distance within each hexagon in meters.
 
-##### Distance and Neighborhood Metrics
+#### Distance and Neighborhood Metrics
 For each hexagon, two neighborhoods were created, one with a radius of 3 hexagons and one with a radius of 9 hexagons. Census data, land cover data and building data were aggregated by neighborhood. For all variables, the neighborhood of each variable represented the sum of the neighborhood, except land cover, which uses the mode and impervious surface, which was calculated both as the mean and median of the neighborhood.
 
 Distance was calculated in two ways. Euclidean distance was calculated as the shortest number of hexagons between the endpoint and each hexagon. Manhattan distance was calculated as the shortest number of hexagons between the endpoint and each hexagon, which have paved roads that are not large (interstate-style highways.)
 
-##### Endpoint Rank
+#### Endpoint Rank
 For each hexagon - Endpoint relationship, the Euclidean distance rank was calculated. For example, for a relationship between a hexagon and an endpoint where there are four other endpoints that are closer, a distance rank of 5 would be assigned. Additionally, the total residential populations served for other endpoints were summed into features representing total population served of closer endpoints and total population served of farther endpoints.
 
-##### Area & Name Matching
+#### Area & Name Matching
 Each hexagon was spatially joined to its parent sub-county, place and county geography (Census Bureau TIGER/Line). The names of each of these geographies was then compared to the facility name of each CWNS endpoint within the area of consideration by using a Jaro-Winkler string distance calculation to determine name similarity score. The Match Score was calculated as whichever of the three scores returned the best result so as to provide flexibility for treatment plants that may be named after geographies of different sizes.
 
 
-#### Selecting and Splitting the Training and Testing Datasets
+### Selecting and Splitting the Training and Testing Datasets
 
-Machine learning models require a training dataset, which is used to train the model to recognize patterns in the data. These patterns are used to create a model, which will be used on additional data to return a probability that a hexagon is part of the sewershed for a given endpoint location. A separate testing dataset, which has not been exposed to the model training process is then used to validate the model and measure performance. To ensure that the model was trained and validated on the best possible data, a linear regression was used to relate the total residential population served by the endpoint in the CWNS with the 2020 census population for the same area. Where the residual of the population for a utility sourced system was more than two standard deviations away from the mean, that sewershed was removed from the training and testing sets, but retained for inclusion in the final dataset.
+Machine learning models require a training dataset, which is used to train the model to recognize patterns in the data. These patterns are used to create a model, which will be used on additional data to return a probability that a hexagon is part of the sewershed for a given endpoint location. A separate testing dataset, which has not been exposed to the model training process is then used to validate the model and measure performance. To ensure that the model was trained and validated on the best possible data, a linear regression was used to relate the total residential population served by the endpoint in the CWNS with the 2020 census population for the same area. Where the residual of the population for a sourced system was more than two standard deviations away from the mean, that sewershed was removed from the training and testing sets, but retained for inclusion in the final dataset.
 
 CWNS endpoints were randomly sampled into either training or testing, with 70% of endpoints used for training and 30% used for testing. The area of consideration for the model to assign probabilities to hexagons is ~3,200 km^2, meaning that there is a class imbalance between hexagons that are 'FALSE' (not sewered by that specific endpoint) and 'TRUE' (sewered by that specific endpoint). This class imbalance was corrected by randomly sampling 'FALSE' hexagons to match the number of 'TRUE' hexagons in the training set.
 
-### Model Fitting
+## Model Fitting
 A boosted tree model was selected for its ability to resolve complex interactions and for its improved accuracy over decision tree and random forest models, which were tested. The algorithm used was the xgBoost (extreme gradient boosting), obtained through the 'xgboost' package in R. The training data was composed of  200,000 observations (100,000 'TRUE' and 100,000 'FALSE'). The model was tuned to find the optimal parameters for the model which was done using a grid search with 5-fold cross validation. For tuning, 'gbtree' and 'gblinear' methods were tested, with maximum tree depths ranging between 3 and 10, a minimum child weight between 1 and 10, a subsample between 0.5 and 1 and a column sample by tree between 0.5 and 1.
 Early models incorporated all features but were later restricted to features with high importance values.
 
-### Constructing Sewersheds from Model Results
+## Constructing Sewersheds from Model Results
 Once the model was applied nationally, probabilities for hexagon-to-endpoint pairs were aggregated into distinct sewersheds for each endpoint. To determine a 'probability threshold', meaning the probability above which is considered a positive result, the model was tested across a classification threshold between 0.01 and 0.99 and broken down by sewershed population. Bins for population served are '< 1,000', '1,000 - 4,999','5,000 - 9,999','10,000 - 99,999' and '10,000 +'. The process for hexagon selection and aggregation is as follows:
 
 1. CWNS endpoints are ranked from smallest to largest 'Total Residential Population'. This ensures that smaller systems take priority over larger systems when a hexagon has more than one high probability and avoids overlapping sewersheds.
@@ -483,11 +478,11 @@ Once the model was applied nationally, probabilities for hexagon-to-endpoint pai
 
 Once outliers were identified, they were removed from the sewershed. Any hexagons that were within an outlier polygon or beyond the population / probability cutoff were considered to still be available for larger sewersheds. Any hexagon that was determined to be part of the sewershed (not an outlier) was removed from consideration for larger sewersheds. Once final sewersheds were delineated, interior holes were filled to aid in visualization.
 
-### Validation
-Two validations were performed to evaluate the percent of agreement by area and the percent of the sewered population captured by the estimated sewersheds. Sewersheds were modeled for the endpoints within the testing dataset and compared with their utility sourced versions. To calculate area, a spatial intersection was performed and percent capture was calculated as the percent of the area of the modeled sewershed that was within the utility sourced sewershed, divided by the total area of the utility sourced sewershed. The percent of the sewered population captured was calculated as the cumulative sum of the population within hexagons assigned to an endpoint divided by the total residential population as reported in the CWNS.
+## Validation
+Two validations were performed to evaluate the percent of agreement by area and the percent of the sewered population captured by the estimated sewersheds. Sewersheds were modeled for the endpoints within the testing dataset and compared with their sourced versions. To calculate area, a spatial intersection was performed and percent capture was calculated as the percent of the area of the modeled sewershed that was within the sourced sewershed, divided by the total area of the sourced sewershed. The percent of the sewered population captured was calculated as the cumulative sum of the population within hexagons assigned to an endpoint divided by the total residential population as reported in the CWNS.
 
 
-## Results
+# Results
 In total, we started with 54,738 rows of data, which were queried down to a universe of 17,272 individual endpoints to be included in the modeling efforts. Of these endpoints, 276 were found to either have duplicated geo-locations with multiple CWNS IDs or were otherwise found to have insufficient data reported in the CWNS. Therefore, the final universe of endpoints used for sewershed delineation is 16,996.
 
 A total of 3,187 sewersheds were succesfully matched with their corresponding CWNS endpoints, leaving the model to estimate sewersheds for 13,809 endpoints.An application was built to enable multiple team members to perform validation of the matches (@fig-match)
@@ -495,7 +490,7 @@ A total of 3,187 sewersheds were succesfully matched with their corresponding CW
 ![A screenshot of a shiny application used by the research team to validate sewershed to CWNS endpoint matches.](img/App_1.png){#fig-match fig-alt="A screenshot of a shiny application used by the research team to validate sewershed to CWNS endpoint matches." fig-align="left" width=50%}
 
 
-### Model Tuning
+## Model Tuning
 21 variables were identified as the most important features for the model (@fig-importance):
 
 - Euclidean Distance
@@ -520,7 +515,7 @@ A total of 3,187 sewersheds were succesfully matched with their corresponding CW
 - City / Place Match
 - The count of urban population within the 3-hexagon neighborhood
 
-```{r}
+```{r importanceFig, eval = FALSE}
 #| label: fig-importance
 #| fig-cap: "Variable importance for the sewershed model."
 #| fig-align: "center"
@@ -538,6 +533,7 @@ ggplot(importance)+
   theme(axis.text.y = element_text(size = 8),
         axis.title.x = element_text(size = 10),
         axis.title.y = element_text(size = 10))
+
 ```
 
 The results of the model tuning returned an optimal model using the gbtree method, a maximum tree depth of 7, a minimum child weight of 9.33, a sub sample of 0.994 and column sample by tree of 0.966. The overall accuracy of the final model was 90.65% with a sensitivity of 92.6% and a specificity of 88.9%.
@@ -546,14 +542,14 @@ The probabilty cutoff was calculated from the final model predictions on the tes
 
 ![](img/probability.png){#fig-probabilities fig-alt="A bar chart showing the probability cutoff for each sewershed size." fig-align="left" width=50%}
 
-### Sewershed Validation
+## Sewershed Validation
 Compared with the utility sources sewersheds, modeled sewersheds from the testing dataset had a median population capture of of 74.4% (@tbl-valid_pop).
 
-```{r tbl-valid_pop}
+```{r tbl-valid_pop, eval = FALSE}
 #| label: tbl-valid_pop
-#| tbl-cap: "Percent of sewered population captured by modeled sewersheds compared with utility sourced sewersheds."
+#| tbl-cap: "Percent of sewered population captured by modeled sewersheds compared with sourced sewersheds."
 #| tbl-align: "center"
-#| tbl-alt: "A table showing the percent of sewered population captured by modeled sewersheds compared with utility sourced sewersheds."
+#| tbl-alt: "A table showing the percent of sewered population captured by modeled sewersheds compared with sourced sewersheds."
 #| tbl-width: 6
 #| tbl-height: 4
 #| tbl-show: "hold"
@@ -563,7 +559,7 @@ valid.pop <- data.frame(Metric = c("Population","Area"),
                         Median = c(74.39,59.43),
                         Q3 = c(90.23,77.63))
 
-gt(valid.pop)%>%
+vp.tbl <- gt(valid.pop)%>%
   fmt_number(columns = c(Q1,Median,Q3), use_seps = TRUE, decimals = 2)%>%
   cols_label(Metric = "Metric",
              Q1 = "25th Percentile",
@@ -573,8 +569,10 @@ gt(valid.pop)%>%
   tab_spanner(label = "Sewershed Validation", columns = c(Q1,Median,Q3))%>%
   cols_align(align = "center", columns = everything())
 
-
+gtsave(vp.tbl, "D:/Github/Sewersheds/Documentation/img/Validation_Population.png", expand = 0.5, zoom = 1.5)
 ```
+![A table showing the percent of sewered population captured by modeled sewersheds compared with sourced sewersheds.](img/Validation_Population.png){#tbl-valid_pop tbl-alt="A table showing the percent of sewered population captured by modeled sewersheds compared with sourced sewersheds." tbl-align="center" width=50%}
+
 
 In total, the final dataset includes 16,961 sewersheds, meaning only 30 endpoints were not able to be modeled. The dataset can be accessed and viewed on the [EPA internal web application](https://epa.maps.arcgis.com/apps/instant/atlas/index.html?appid=5b098638234349dd8dca7f764e7aa4e3)
 
@@ -586,7 +584,7 @@ In total, the final dataset includes 16,961 sewersheds, meaning only 30 endpoint
 
 ### Sewered Population of Utility-Sourced Sewersheds by State
 
-```{r stateSewersheds}
+```{r stateSewersheds, eval = FALSE}
 #| label: fig-stateSwrPop
 #| fig-cap: "The sewered population which is served by utility-sourced sewersheds by state."
 #| fig-align: "center"
@@ -602,26 +600,23 @@ utility.pop.counts %>%
   gt() %>%
   fmt_number(columns = c(Pop_T,Pop_U),use_seps = TRUE,
              decimals = 0)%>%
-  cols_label(Pct = "Percent of Total Population Served by Utility Sourced Sewersheds",
+  cols_label(Pct = "Percent of Total Population Served by sourced Sewersheds",
              Pop_T = "Total Sewered Population",
-             Pop_U = "Sewered Population of Utility Sourced Sewersheds")%>%
+             Pop_U = "Sewered Population of sourced Sewersheds")%>%
   gt_plt_bar(column = Pct, keep_column = FALSE, color = "#34a6ba")
 ```
 
 
-### Sources of Utility Sourced Sewersheds
+### Sources of sourced Sewersheds
 
-```{r stateSewersheds}
-#| label: fig-utilitySources
-#| fig-cap: "Sources for Utility Sourced Sewersheds."
-#| fig-align: "center"
-#| fig-alt: "A list of Sources for Utility Sourced Sewersheds."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-show: "hold"
+```{r stateSewersheds, eval = FALSE}
+#| label: tbl-utilitySources
+#| tbl-cap: "Sources for sourced Sewersheds."
+#| tbl-alt: "A list of Sources for sourced Sewersheds."
 
 utility.sources <- read.csv("Data/Utility_Sources.csv")%>%
-  select(State,Detail,Source)
+  select(State,Detail,Source)%>%
+  mutate(Detail = str_replace(Detail,"/"," & "))
 
 utility.sources%>%
   gt() %>%
