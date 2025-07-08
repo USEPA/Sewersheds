@@ -34,17 +34,17 @@ This document serves as background material for the EPA National Sewershed Datas
 >"The [Clean Watershed Needs Survey(CWNS)](https://www.epa.gov/cwns/clean-watersheds-needs-survey-cwns-2022-report-and-data)provides an assessment of the capital investments necessary for states, the District of Columbia, and U.S. Territories to meet the Clean Water Act’s (CWA) water quality goals over the subsequent 20 years. These needs include projects and related infrastructure costs for wastewater publicly owned treatment works, stormwater treatment, nonpoint source control, and decentralized wastewater treatment.
 The U.S. Environmental Protection Agency (EPA) has prepared the 2022 CWNS Report to Congress in compliance with CWA section 516(b)(1)(B) (33 U.S Code §1375) as well as CWA section 609, which was added by the Infrastructure Investment and Jobs Act (IIJA), P.L. 117-58, November 15, 2021. This Report summarizes the results of EPA’s 17th survey since the CWA was enacted in 1972."
 
-As part of this survey, utilities submit information related to their treatment plants. Some treatment plants may discharge a portion of their wastewater downstream to other treatment plants. When a treatment plant discharges less than 50% of its wastewater to another facility, we refer to it as an 'endpoint', meaning that it is considered the final destination for wastewater prior to treatment and then discharge back into the environment, most frequently via direct discharge into a water body such as a river or ocean. The entire sewered area that contributes wastewater to a specific endpoint is referred to as a 'sewershed'. A sewershed may therfore refer to a system that is smaller than a single utility or conversely be made up of multiple utilities. The relationship between utilities and endpoints can be derived from CWNS reporting by accounting for reported discharge of wastewater between facilities.
+As part of this survey, state-level teams submit technical information about publicly owned treatment plants. Some treatment plants may discharge a portion of their wastewater downstream to other treatment plants. When a treatment plant discharges less than 50% of its wastewater to another POTW, we refer to it as an 'endpoint', meaning that it is considered the final destination for wastewater prior to treatment and then discharge back into the environment, most frequently via direct discharge into a water body such as a river or ocean. The entire sewered area that contributes wastewater to a specific endpoint is referred to as a 'sewershed'. A sewershed may therefore include a single treatment plant and collection system or multiple treatment plants and their collection systems. The relationship between treatment plants and endpoints can be derived from CWNS reporting by accounting for reported discharge of wastewater between facilities.
 
 Sewershed extents are not a part of reporting within the CWNS and are otherwise not statutorily required under the CWA. Understanding the sewered area related to an endpoint however, is critical to support the CWA, as well as multiple other agency and administration priorities. Sewershed boundaries can, for example, facilitate wastewater surveillance efforts and link disease tracking to affected populations. The ability to map sewer systems can also be critical to infrastructure and urban planning, providing information on areas that can be developed or could benefit from resources to aid in economic development.
 
-EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^
+EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^.
 
 # Introduction
 
 Prior modeling similar to sewershed was conducted by EPA in 2024 for the service areas of community water systems. While there are many similarities between public water and wastewater infrastructure, there are several key differences. For example, there are more than twice as many community water systems in the United States as there are publicly owned treatment works (POTWs). In general, sewer systems represent a larger investment in infrastructure than public water service. Water, for example, is pressurized throughout the system and can more easily overcome changes in topography, whereas sewer largely relies on gravity for wastewater flow. Where gravity must be overcome within wastewater systems, pumping or elevator stations must be installed. Sewer lines are also larger than water supply lines and come with increased construction costs. It is not uncommon for a suburban or rural home to have a public water connection for supply and a septic system for discharge of wastewater. However, having access to a sewer and no access to public water occurs far more infrequently. This suggests that sewer systems are more frequently located in more urbanized areas.
 
-The previous model for community water systems utilized census blocks, supplemented with land parcels as the basic building block for service areas. We have changed the spatial unit for this model to [H3 hexagons](https://h3geo.org/). H3 hexagons are a global grid system that have several key advantages over census boundaries. For example, because hexagons are roughly the same size anywhere on the planet, many statistical computations related to area and distance can be streamlined, which allows for the development of predictor variables that can incorporate more complexity into machine learning models. The level of resolution we chose for the sewershed model was level 9, which is roughly 0.11 km^2^. Incoporating additional complexity into our predictive data, we also advanced the model from a random forest (used for community water systems) to a boosted tree method, which allows for more confidence in the model predictions and the ability to better determine relationships among predictor data that may have otherwise been obscured.
+The previous model for community water systems utilized census blocks, supplemented with land parcels as the basic building block for service areas. We have changed the spatial unit for this model to [H3 hexagons](https://h3geo.org/). H3 hexagons are a global grid system that have several key advantages over census boundaries such as having uniform sizes, which allow for more consistent spatial resolution and more efficient computation.
 
 This document provides detail on how public data was collected, how the model was developed and discusses the resulting national dataset of sewersheds and how it can be used to support EPA's mission.
 
@@ -56,6 +56,7 @@ This document provides detail on how public data was collected, how the model wa
 | Sewershed | The area that contributes wastewater to a specific endpoint |
 | Utility | A public or private entity that provides wastewater treatment services |
 | POTW | Publicly Owned Treatment Works |
+| Sourced Sewershed | A sewershed that has been obtained from a publicly available source as opposed to having been modeled.
 
 
 
@@ -63,7 +64,7 @@ This document provides detail on how public data was collected, how the model wa
 
 The goal of this project was to publish a comprehensive dataset of sewershed boundaries in the United States that can be linked to the CWNS. To that end, we sought to include as many publicly available sewershed areas as possible. Ideally, every boundary would be sourced from the utility level to represent the most accurate representation of sewersheds possible. However, this data does not always exist, which necessitates the creation of modeling approaches to fill in the gaps.
 
-EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 3,280 sewersheds from public sources which could be linked to the CWNS (@tbl-stateSwr).
+EPA conducted a rigorous search for publicly available sewershed data through online searches and engagement with stakeholders including federal and state agencies, regional partners, NGOs and academics working in the wastewater field. In total, we obtained 3,280 sewersheds from public sources which could be linked to POTWs (@tbl-stateSwr).
 
 ```{r stateSewersheds, eval = FALSE}
 #| label: tbl-stateSwr
@@ -97,9 +98,9 @@ ut.st.tbl <- utility.st %>%
              decimals = 0)%>%
   cols_label(state_name = "State",
              Pop = "Sewered Population of sourced Sewersheds",
-             nSystems = "Count of sourced Sewersheds",
+             nSystems = "Count of Sourced Sewersheds",
              Pct = "% of State Sewersheds",
-             Pop_Pct = "% of Sewered Population Served by sourced Sewersheds")%>%
+             Pop_Pct = "% of Sewered Population Served by Sourced Sewersheds")%>%
   gt_plt_bar_pct(column = Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE,
                  label_cutoff = 0.5)%>%
   gt_plt_bar_pct(column = Pop_Pct, scaled = TRUE, fill = "#4f97d1", labels = TRUE,
@@ -131,34 +132,11 @@ Not all records within the CWNS represent endpoints for wastewater collection. T
 - Total receiving population > 0  
 - facility type contains “treatment plant”
 - Residential population > 0
-- Percent of Discharge is < 50%
+- Percent of Discharge to another POTW < 50%
 
 The data compiled from the CWNS was reviewed for accuracy by EPA[^1].
 
 [^1]: After review, it was determined that it is **NOT** safe to assume all rows in 'FACILITIES_CONFIRMED.txt' are all end points. It is safe to assume all rows in 'POPULATION_WASTEWATER_CONFIRMED.txt.' are endpoints. rows identified as having 'CHANGE_TYPE' = 'New' should be removed.
-
-
-The CWNS data we are working with was received as a Microsoft Access Database, which is located in 'Data/CWNS 2022 Database_April2024.accdb'. We use 7 tables from this access database. Note that 'POPULATION_WASTEWATER_CONFIRMED' was manually updated by ERG in June, 2024 and does not reflect original data in the access database. Each table was exported from Access to a comma delimited file. The seven files used are:
-
-- 'Data/FACILITIES.txt'
-- 'Data/POPULATION_WASTEWATER.txt'
-- 'Data/FACILITY_TYPES.txt'
-- 'Data/PHYSICAL_LOCATION.txt'
-- 'Data/FACILITIES_CONFIRMED.txt'
-- 'Data/POPULATION_WASTEWATER_CONFIRMED_updated06242024.csv'
-- 'Data/DISCHARGES.csv'
-
-The following steps describe the process used to query endpoints to be included in modeling efforts. The code can also be viewed in the expandable code tab.
-
-We create a flat file where each row represents a facility and perform the followng steps:
-- In 'POPULATION_WASTEWATER", if no value is given for the column 'END_FACILITY', we assign it "N", meaning it is not considered an end facility.
-- 'END_FACILITY' and 'FACILITY_TYPE' columns for the 'FACILITIES_CONFIRMED' file are set to 'Y' and 'Treatment Plant' respectively.
-- Discharge is calculated using the 'DISCHARGES' file. Because systems can discharge to multiple other systems, we calculate the sum of discharges to determine the total % discharged elsewhere. If discharge is not reported for a system, we default the value to zero.
-- Data tables are combined and the filter is applied: 
-
-  - `TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant" & PRESENT_DISCHARGE_PERCENTAGE < 50`
-  
-Total receiving population = total number of people the facility is receiving from, regardless of whether its sent on elsewhere  
 
 
 
@@ -272,7 +250,7 @@ For boundaries that do not intersect any endpoints, a buffer is applied using a 
 
 For each pair of matches (CWNS <-> State Boundary), a fuzzy score was calculated to compare the given names of the treatment works. A score of zero indicates that the names are completely dissimilar whereas a score of 1 indicates identical names. This score is labeled 'F_Score' or $S_f$. The method we use is the 'Jaro-Winkler' distance:
 
-| "The Jaro-Winkler distance (method=jw, 0<p<=0.25) adds a correction term to the Jaro-distance. It is defined as d − l · p · d, where d is the Jaro-distance. Here, l is obtained by counting, from the start of the input strings, after how many characters the first character mismatch between the two strings occurs, with a maximum of four. The factor p is a ’prefix’ factor, which in the work of Winkler is often chosen 0.1."
+| "The Jaro-Winkler distance (method=jw, 0<p<=0.25) adds a correction term to the Jaro-distance. It is defined as d − l · p · d, where d is the Jaro-distance. Here, l is obtained by counting, from the start of the input strings, after how many characters the first character mismatch between the two strings occurs, with a maximum of four. The factor p is a ’prefix’ factor, which in the work of Winkler is often chosen 0.1." [Source](https://cran.r-project.org/web/packages/stringdist/stringdist.pdf)
 
 The Jaro-Winkler method uses 0 for identical and 1 for completely dissimilar. Therefore: $S_f=1-D_{JW}$ where $D_{jw} =$ Jaro-Winkler Distance
 
@@ -498,7 +476,7 @@ A total of 3,187 sewersheds were succesfully matched with their corresponding CW
 - Endpoint Near Rank
 - Population Served by Closer endpoints
 - Mean elevation of the 3-hexagon neighborhood
-- The difference between Euclidean and Manhatten distance
+- The difference between Euclidean and Manhattan distance
 - Mean Imperviousness
 - Name Match Score
 - Count of urban population between the hexagon and endpoint.
@@ -623,3 +601,27 @@ utility.sources%>%
   fmt_url(columns = Source,
           rows = starts_with("https", vars = Source))
 ```
+
+## Appendix II (Data Query)
+
+The CWNS data we are working with was received as a Microsoft Access Database, which is located in 'Data/CWNS 2022 Database_April2024.accdb'. We use 7 tables from this access database. Note that 'POPULATION_WASTEWATER_CONFIRMED' was manually updated by ERG in June, 2024 and does not reflect original data in the access database. Each table was exported from Access to a comma delimited file. The seven files used are:
+
+- 'Data/FACILITIES.txt'
+- 'Data/POPULATION_WASTEWATER.txt'
+- 'Data/FACILITY_TYPES.txt'
+- 'Data/PHYSICAL_LOCATION.txt'
+- 'Data/FACILITIES_CONFIRMED.txt'
+- 'Data/POPULATION_WASTEWATER_CONFIRMED_updated06242024.csv'
+- 'Data/DISCHARGES.csv'
+
+The following steps describe the process used to query endpoints to be included in modeling efforts. The code can also be viewed in the expandable code tab.
+
+We create a flat file where each row represents a POTW and perform the followng steps:
+- In 'POPULATION_WASTEWATER", if no value is given for the column 'END_FACILITY', we assign it "N", meaning it is not considered an end facility.
+- 'END_FACILITY' and 'FACILITY_TYPE' columns for the 'FACILITIES_CONFIRMED' file are set to 'Y' and 'Treatment Plant' respectively.
+- Discharge is calculated using the 'DISCHARGES' file. Because systems can discharge to multiple other systems, we calculate the sum of discharges to determine the total % discharged elsewhere. If discharge is not reported for a system, we default the value to zero.
+- Data tables are combined and the filter is applied: 
+
+  - `TOTAL_RES_POPULATION_2022 > 0 & FACILITY_TYPE=="Treatment Plant" & PRESENT_DISCHARGE_PERCENTAGE < 50`
+  
+Total receiving population = total number of people the facility is receiving from, regardless of whether its sent on elsewhere  
