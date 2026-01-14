@@ -24,10 +24,11 @@ library(h3)
 library(gt)
 library(gtExtras)
 library(plotly)
+library(here)
 
 knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
 
-utility.df <- vroom("D:/Github/Sewersheds/Data/Utilities_06232025.csv")%>%
+utility.df <- vroom(here("Data/Utilities_06232025.csv"))%>%
   drop_na(FACILITY_NAME)
 ```
 
