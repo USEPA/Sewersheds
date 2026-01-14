@@ -1,4 +1,14 @@
-# Wastewater Infrastructure: Mapping the Nation's Sewersheds
+# Data
+
+**Current Release: Version 1.0**
+
+The current release of the sewershed data is located in this folder (Current_Release.zip) and will always be maintained using the permanent link: https://github.com/USEPA/Sewersheds/blob/main/Current_Release.zip
+
+As versions are replaced, they will be maintained in the folder 'Version_History'.
+
+
+
+## Wastewater Infrastructure: Mapping the Nation's Sewersheds
 "The [Clean Watershed Needs Survey(CWNS)](https://www.epa.gov/cwns/clean-watersheds-needs-survey-cwns-2022-report-and-data) provides an assessment of the capital investments necessary for states, the District of Columbia, and U.S. Territories to meet the Clean Water Act’s (CWA) water quality goals over the subsequent 20 years. These needs include projects and related infrastructure costs for wastewater publicly owned treatment works, stormwater treatment, nonpoint source control, and decentralized wastewater treatment.
 The U.S. Environmental Protection Agency (EPA) has prepared the 2022 CWNS Report to Congress in compliance with CWA section 516(b)(1)(B) (33 U.S Code §1375) as well as CWA section 609, which was added by the Infrastructure Investment and Jobs Act (IIJA), P.L. 117-58, November 15, 2021. This Report summarizes the results of EPA’s 17th survey since the CWA was enacted in 1972."
 
@@ -8,6 +18,14 @@ Sewershed extents are not a part of reporting within the CWNS and are otherwise 
 
 EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^. In total, 17,084 sewersheds are present in the data, with 3,192 obtained from a variety of public sources and 13,892 modeled using machine learning.
 
+### Contact
+For information related to this repository, please contact: Andrew Murray (Murray.AndrewR@epa.gov).
+
+### Additional Resources
+
+[EPA Sewershed Webpage](https://www.epa.gov/cwns/sewersheds)
+
+[Sewershed Web Map](https://epa.maps.arcgis.com/apps/instant/atlas/index.html?appid=5b098638234349dd8dca7f764e7aa4e3)
 
 ### Credits
 
