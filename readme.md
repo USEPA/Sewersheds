@@ -1,6 +1,6 @@
 # Data
 
-**Current Release: Version 1.0**
+**Current Release: Version 1.1 (Updated January 26, 2026)**
 
 The current release of the sewershed data is located in this folder (Current_Release.zip) and will always be maintained using the permanent link: https://github.com/USEPA/Sewersheds/blob/main/Current_Release.zip
 
