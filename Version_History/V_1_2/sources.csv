@@ -1,0 +1,78 @@
+CWNS_ID,POTW_Name,Source_Name,How_Obtained,Source_Path,Feature_Type,Method,Date_Obtained,CWNS_Type,Version_Added
+01000139001,PRATTVILLE AUTAUGA CREEK WWTP,Pratville,Public Download,https://www.arcgis.com/home/item.html?id=b35735a8171c4625aac9c3a3e95dbfe6,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.1
+01000139003,PRATTVILLE PINE CREEK WWTP,Pratville,Public Download,https://www.arcgis.com/home/item.html?id=b35735a8171c4625aac9c3a3e95dbfe6,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.1
+13000000715,Blalock Lakes WPCP (Coweta County),CCWSA,Public Download,https://maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+13000000716,The Oaks at Turin WPCP (Coweta County),CCWSA,Public Download,https://maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+13000000717,Twelve Parks WWTP (Coweta County),CCWSA,Public Download,https://maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+13000000722,Sargent Arnco WPCP  (Coweta County),CCWSA,Public Download,https://maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+13000208007,Wahoo Creek WPCP,Newnan Utilities,Public Download,https://maps.arcgis.com/home/item.html?id=b80c2e25ae3e412486ec9ebf845b2f20,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+13000605001,Shenandoah WWTF (Coweta County),CCWSA,Public Download,https://maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+16000016001,REXBURG TREATMENT FACILITY,Rexburg,Feedback Portal,NA,Sewershed Polygon,As is,1/14/2026,Endpoint,1.1
+17000721001,"MWRDGC, Stickney Treatment Plant",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721002,"MWRDGC, HANOVER PARK WRP",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721005,"MWRDGC, JOHN E EGAN WRP",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721006,"MWRDGC, JAMES C. KIRIE WRP",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721007,"MWRDGC, NORTHSIDE (Terrence O'Brien) WRP",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721008,"MWRDGC, LEMONT WRP",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+17000721009,"MWRDGC, CALUMET WRP, MWRDGC",MWRD,Email Communication,NA,Sewershed Polygon,As is,1/9/2026,Endpoint,1.1
+23000017001,City of Saco Water Resource Recovery Division,Town of Saco,Public Download,https://www.arcgis.com/home/item.html?id=ad9154a561194b8ba0390f85f4fecdc2,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.1
+24000039001,Greensboro WWTP,Caroline County MD,Email Communication,NA,Sewershed Polygon,As is,1/15/2026,Endpoint,1.1
+37009202001,APEX WWTP,Town of Apex,Public Download,https://services1.arcgis.com/nry3yyvaEfskMEXA/arcgis/rest/services/SewerStormwater/FeatureServer,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+39003545001,Southwest Licking Community WSD WWTP and Sewers,Licking Regional Water District,Public Download,https://storymaps.arcgis.com/stories/2017a093ab4441ebbebd9f73f4156da6,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.1
+1000139001,PRATTVILLE AUTAUGA CREEK WWTP,Pratville,Public Download,https://www.arcgis.com/home/item.html?id=b35735a8171c4625aac9c3a3e95dbfe6,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.2
+1000139003,PRATTVILLE PINE CREEK WWTP,Pratville,Public Download,https://www.arcgis.com/home/item.html?id=b35735a8171c4625aac9c3a3e95dbfe6,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.2
+13000000715,Blalock Lakes WPCP (Coweta County),CCWSA,Public Download,https://epa.maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+13000000716,The Oaks at Turin WPCP (Coweta County),CCWSA,Public Download,https://epa.maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+13000000717,Twelve Parks WWTP (Coweta County),CCWSA,Public Download,https://epa.maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+13000000722,Sargent Arnco WPCP  (Coweta County),CCWSA,Public Download,https://epa.maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+13000208007,Wahoo Creek WPCP,Newnan Utilities,Public Download,https://epa.maps.arcgis.com/home/item.html?id=b80c2e25ae3e412486ec9ebf845b2f20,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+13000605001,Shenandoah WWTF (Coweta County),CCWSA,Public Download,https://epa.maps.arcgis.com/home/item.html?id=8c4db3d3c0204d76a8728bae817763d0,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+23000017001,City of Saco Water Resource Recovery Division,Town of Saco,Public Download,https://www.arcgis.com/home/item.html?id=ad9154a561194b8ba0390f85f4fecdc2,Sewer Lines,150m buffer,1/16/2026,Endpoint,1.2
+37009202001,APEX WWTP,Town of Apex,Public Download,https://services1.arcgis.com/nry3yyvaEfskMEXA/arcgis/rest/services/SewerStormwater/FeatureServer,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+39003545001,Southwest Licking Community WSD WWTP and Sewers,Licking Regional Water District,Public Download,https://storymaps.arcgis.com/stories/2017a093ab4441ebbebd9f73f4156da6,Sewer Lines,150m buffer,1/15/2026,Endpoint,1.2
+44000016001,New Shoreham,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000015001,Newport,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000024001,South Kingstown,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000010001,Jamestown,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000042001,Quonset Point,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44440002001,Bristol,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000009001,East Providence,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000031001,Bucklin Point,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000022001,Fields Point,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000028001,West Warwick,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000003001,Burrillville,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000034001,Zambarano,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000030001,Woonsocket,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000027001,Warwick,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000029001,Westerly,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+25000091001,Fall River,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000008001,East Greenwich,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000023001,Smithfield,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000006001,Cranston,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000014001,Scarborough,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+44000260011,Warren,RIGIS,Public Download,https://www.rigis.org/datasets/edc::sewered-areas/about,Sewershed Polygon,As is,5/7/2026,Endpoint,1.2
+15000009001,NA,Maui County,Public Download,https://www.mauicounty.gov/2939/Wastewater-GIS-Program,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000009003,NA,Maui County,Public Download,https://www.mauicounty.gov/2939/Wastewater-GIS-Program,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000009002,NA,Maui County,Public Download,https://www.mauicounty.gov/2939/Wastewater-GIS-Program,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000009004,NA,Maui County,Public Download,https://www.mauicounty.gov/2939/Wastewater-GIS-Program,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000009005,NA,Maui County,Public Download,https://www.mauicounty.gov/2939/Wastewater-GIS-Program,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003010,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003011,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003002,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003023,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003012,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003001,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003019,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003021,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000003022,NA,Honolulu GIS,Public Download,https://honolulu-cchnl.opendata.arcgis.com/datasets/cchnl::sewer-mains/about,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000007001,NA,University of Hawaii,Public Download,https://epa.maps.arcgis.com/home/item.html?id=5c083b44b5ea420785ac1dfdf5f94a23,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000007002,NA,University of Hawaii,Public Download,https://epa.maps.arcgis.com/home/item.html?id=5c083b44b5ea420785ac1dfdf5f94a23,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000007004,NA,University of Hawaii,Public Download,https://epa.maps.arcgis.com/home/item.html?id=5c083b44b5ea420785ac1dfdf5f94a23,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001005,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001001,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001012,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001005,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001005,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001003,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001014,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2
+15000001002,NA,Hawaii County,Public Download,https://services1.arcgis.com/C2LPusZs5OXNGFDn/arcgis/rest/services/Wastewater_Division/FeatureServer,Sewer Lines,150m buffer,4/1/2026,Endpoint,1.2

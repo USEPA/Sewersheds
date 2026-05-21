@@ -1,3 +1,5 @@
 Current_Release.zip filter=lfs diff=lfs merge=lfs -text
 /Version_History/V_1_0/Version_1_0.gpkg filter=lfs diff=lfs merge=lfs -text
 /Version_History/V_1_1/V_1_1.gpkg filter=lfs diff=lfs merge=lfs -text
+/version_history/V_1_2/Version_1_2.gdb filter=lfs diff=lfs merge=lfs -text
+/version_history/V_1_2/crosswalks/Sewershed_Crosswalk_blocks.csv filter=lfs diff=lfs merge=lfs -text

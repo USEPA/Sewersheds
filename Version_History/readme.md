@@ -1,20 +1,48 @@
-**Current Release: Version 1.1 (Updated January 26, 2026)**
+**Current Release: Version 1.2 (Updated May 21, 2026)**
 
-## Version 1.1 Release Notes
+## Version 1.2 Release Notes
 
-Version 1.1 of the Sewershed dataset was released on January 26th, 2026.
+Version 1.2 of the Sewershed dataset was released on May 21, 2026.
 
-- 21 new utility sourced sewersheds were included
+
+### Census Crosswalk Files
+
+Census crosswalk files are now available for sewersheds. Go to 'V_1_2/crosswalks/' to download. There are three available geographies:
+census blocks, block groups and tracts. Crosswalks were developed using microsoft building footprints to weight census block populations where sewersheds do not completely contain a census block.
+
+Method:
+Microsoft building footprints are filtered to those that are at least 40 square meters (roughly the size of a two-car garage). 
+Building centroids are then intersected with census blocks and overlapping areas of sewersheds + census blocks. Block weights are 
+then calculated as the count of buildings within a block that are also within a sewershed, divided by the total number of buildings within that block.
+This method gives a more accurate weight of census demographics relative to standard area weighting techniques.
+
+![](weight_example.png)
+
+#### Crosswalk Column Descriptions 
+
+| column          | description                                                                                   |
+|-----------------|-----------------------------------------------------------------------------------------------|
+| CWNS_ID    | Unique identifier for each POTW (sewershed) |
+| GEOID | Census designated unique identifier |
+| *Population | The weighted population of the sewershed / census geography pair |
+| *Buildings | The weighted count of buildings > 40m^2 of the sewershed / census geography pair |
+| Crosswalk_Multiplier | Multiply census counts by this value to obtain the weighted estimate for the sewershed / census pair |
+
+
+### Additional Sources
+
+- 35 new utility sourced sewersheds were included
+- Corrections to Rhode Island Sewersheds
 
 **Current breakdown of sourced vs. modeled sewersheds**
 
-3,219 sourced, 13,864 modeled (18.8% sourced).
+3,253 sourced, 13,826 modeled (19% sourced).
 
-We have added a table to this folder named 'sources.csv', which tracks the sewersheds that have been added into the dataset and how the data was obtained.
 
-'sources.csv' metadata
+See 'sources.csv' for an up to date list of sources for sewershed data.
 
-# Add a markdown table with two columns aligned to the left, with column labels: 'column' and 'description' with 5 rows
+**Metadata for the source information of sewershed data.**
+
 | column          | description                                                                                   |
 |-----------------|-----------------------------------------------------------------------------------------------|
 | CWNS_ID    | Unique identifier for each POTW (sewershed) |
