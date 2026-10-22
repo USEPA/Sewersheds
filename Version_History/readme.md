@@ -1,56 +1,16 @@
-**Current Release: Version 1.2 (Updated May 21, 2026)**
+**Current Release: Version 1.3 (Updated October 2026)**
 
-## Version 1.2 Release Notes
+Each folder holds one release of the sewershed dataset and its full release
+notes. The current release is also available as `Current_Release.zip` at the
+top of the repository. A summary of changes between versions is in
+[CHANGELOG.md](../CHANGELOG.md).
 
-Version 1.2 of the Sewershed dataset was released on May 21, 2026.
+| Version | Released | Folder | Highlights |
+|---|---|---|---|
+| **1.3** | October 2026 | [V_1_3](V_1_3/readme.md) | Sources documented for every sourced sewershed; Massachusetts and New Hampshire replaced with current state data; new utility sources; unreliable sources removed (flagged `needs_v2_model`); no overlapping sewersheds; crosswalks with population and building multipliers |
+| 1.2 | May 21, 2026 | [V_1_2](V_1_2/readme.md) | Census crosswalk files; 35 new sourced sewersheds; Rhode Island corrections |
+| 1.1 | January 26, 2026 | [V_1_1](V_1_1/README.md) | 25 new sourced sewersheds; endpoint locations; NPDES crosswalk and discharge links |
+| 1.0 | September 5, 2025 | [V_1_0](V_1_0/README.md) | First release |
 
-
-### Census Crosswalk Files
-
-Census crosswalk files are now available for sewersheds. Go to 'V_1_2/crosswalks/' to download. There are three available geographies:
-census blocks, block groups and tracts. Crosswalks were developed using microsoft building footprints to weight census block populations where sewersheds do not completely contain a census block.
-
-Method:
-Microsoft building footprints are filtered to those that are at least 40 square meters (roughly the size of a two-car garage). 
-Building centroids are then intersected with census blocks and overlapping areas of sewersheds + census blocks. Block weights are 
-then calculated as the count of buildings within a block that are also within a sewershed, divided by the total number of buildings within that block.
-This method gives a more accurate weight of census demographics relative to standard area weighting techniques.
-
-![](weight_example.png)
-
-#### Crosswalk Column Descriptions 
-
-| column          | description                                                                                   |
-|-----------------|-----------------------------------------------------------------------------------------------|
-| CWNS_ID    | Unique identifier for each POTW (sewershed) |
-| GEOID | Census designated unique identifier |
-| *Population | The weighted population of the sewershed / census geography pair |
-| *Buildings | The weighted count of buildings > 40m^2 of the sewershed / census geography pair |
-| Crosswalk_Multiplier | Multiply census counts by this value to obtain the weighted estimate for the sewershed / census pair |
-
-
-### Additional Sources
-
-- 35 new utility sourced sewersheds were included
-- Corrections to Rhode Island Sewersheds
-
-**Current breakdown of sourced vs. modeled sewersheds**
-
-3,253 sourced, 13,826 modeled (19% sourced).
-
-
-See 'sources.csv' for an up to date list of sources for sewershed data.
-
-**Metadata for the source information of sewershed data.**
-
-| column          | description                                                                                   |
-|-----------------|-----------------------------------------------------------------------------------------------|
-| CWNS_ID    | Unique identifier for each POTW (sewershed) |
-| POTW_Name | The POTW name as listed in the CWNS |
-| Source_Name | Name of the data source |
-| How_Obtained | How the data was obtained (public download / feedback portal / email communication) |
-| Source_Path | URL (if applicable) that data was retrieved from |
-| Feature_Type | The type of data obtained, for example a service area polygon or sewer lines |
-| Method | The method used to derive the service area |
-| Date_Obtained | The date EPA obtained the data |
-| Version_Added | The first version that the data was added to the sewershed dataset |
+`sources.csv` in each release folder lists the source of every sourced
+sewershed in that release (complete from Version 1.3).

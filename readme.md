@@ -1,10 +1,10 @@
 # Data
 
-**Current Release: Version 1.1 (Updated January 26, 2026)**
+**Current Release: Version 1.3 (Updated October 2026)** — see [CHANGELOG.md](Version_History/CHANGELOG.md) for what changed.
 
 The current release of the sewershed data is located in this folder (Current_Release.zip) and will always be maintained using the permanent link: https://github.com/USEPA/Sewersheds/blob/main/Current_Release.zip
 
-As versions are replaced, they will be maintained in the folder 'Version_History'.
+As versions are replaced, they will be maintained in the folder 'Version_History'. Release notes for every version are in [CHANGELOG.md](CHANGELOG.md); full notes and column descriptions for the current release are in [Version_History/V_1_3/readme.md](Version_History/V_1_3/readme.md).
 
 
 
@@ -16,7 +16,7 @@ As part of this survey, state-level teams submit technical information about pub
 
 Sewershed extents are not a part of reporting within the CWNS and are otherwise not statutorily required under the CWA. Understanding the sewered area related to an endpoint is critical to support the CWA, as well as multiple other agency and administration priorities. Sewershed boundaries can, for example, facilitate wastewater surveillance efforts and link community disease tracking to affected populations. The ability to map sewer systems can also be critical to infrastructure and urban planning, providing information on areas that can be developed or could benefit from resources to aid in economic development and information on infrastructure gaps.
 
-EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^. In total, 17,084 sewersheds are present in the data, with 3,192 obtained from a variety of public sources and 13,892 modeled using machine learning.
+EPA previously developed geospatial data for community water system service areas for the United States. The development of sewershed boundaries was built off of this experience, using machine learning models which are trained on existing sewershed data and utilizing advanced geospatial techniques to account for the complexities of determining what areas of the United States are sewered and which treatment plants they are served by. The output of this dataset is a spatial dataset of polygons that are constructed from hexagons with a resolution of ~0.11 km^2^. In total, 17,012 sewersheds are present in the data (Version 1.3), with 3,279 obtained from a variety of public sources and 13,733 modeled using machine learning. Sourced sewersheds cover 46% of the sewered population. Sewersheds do not overlap.
 
 ### Contact
 For information related to this repository, please contact: Andrew Murray (Murray.AndrewR@epa.gov).
